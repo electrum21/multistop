@@ -32,17 +32,18 @@ public class TransitOrchestrationService {
     public Map<String, Object> planRoute(RouteRequest request) {
         List<StopInput> orderedStops = request.isOptimiseOrder()
                 ? optimiseStopOrder(request.getStops(),
-                    request.getDepartureTime().toInstant(java.time.ZoneOffset.UTC))
+                    request.getDepartureTime().toInstant(SGT.getRules().getOffset(request.getDepartureTime())))
                 : request.getStops();
 
         return orchestrate(orderedStops,
-                request.getDepartureTime().toInstant(java.time.ZoneOffset.UTC));
+                request.getDepartureTime().toInstant(SGT.getRules().getOffset(request.getDepartureTime())),
+                request.getRoutingPreference(),
+                request.getTransitModes());
     }
 
-    private Map<String, Object> orchestrate(List<StopInput> stops, Instant cursor) {
-        // Best (first) leg result per segment — drives timing
+    private Map<String, Object> orchestrate(List<StopInput> stops, Instant cursor,
+            String routingPreference, List<String> transitModes) {
         List<LegResult> legResults = new ArrayList<>();
-        // All alternatives per segment
         List<List<LegResult>> legAlternatives = new ArrayList<>();
         List<Map<String, Object>> stopMeta = new ArrayList<>();
 
@@ -50,7 +51,7 @@ public class TransitOrchestrationService {
 
         for (int i = 0; i < stops.size() - 1; i++) {
             StopInput from = stops.get(i);
-            StopInput to   = stops.get(i + 1);
+            StopInput to = stops.get(i + 1);
 
             log.info("Leg {}: {} -> {} departing at {}", i + 1,
                     from.getName(), to.getName(), TIME_FMT.format(cursor));
@@ -58,11 +59,12 @@ public class TransitOrchestrationService {
             List<LegResult> alternatives = directionsClient.fetchTransitLegs(
                     resolveLocation(from),
                     resolveLocation(to),
-                    cursor.getEpochSecond()
+                    cursor.getEpochSecond(),
+                    routingPreference,
+                    transitModes
             );
             legAlternatives.add(alternatives);
 
-            // Best option drives the timeline
             LegResult best = alternatives.get(0);
             legResults.add(best);
 
@@ -103,7 +105,6 @@ public class TransitOrchestrationService {
                     (String) stops.get(i).get("name"),
                     (String) stops.get(i + 1).get("name"));
 
-            // Attach alternatives (skip index 0 since that's the leg itself, include all)
             List<Map<String, Object>> altList = new ArrayList<>();
             for (LegResult alt : legAlternatives.get(i)) {
                 altList.add(buildLegMap(alt, i,
@@ -181,12 +182,12 @@ public class TransitOrchestrationService {
     }
 
     private Map<String, Object> buildStopMeta(StopInput stop, Instant arrival,
-                                               Instant departure, int stayMinutes) {
+            Instant departure, int stayMinutes) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("name", stop.getName());
         map.put("lat", stop.getLat() != null ? stop.getLat() : 0.0);
         map.put("lng", stop.getLng() != null ? stop.getLng() : 0.0);
-        map.put("arrivalTime", arrival   != null ? TIME_FMT.format(arrival)   : null);
+        map.put("arrivalTime", arrival != null ? TIME_FMT.format(arrival) : null);
         map.put("departureTime", departure != null ? TIME_FMT.format(departure) : null);
         map.put("stay", stayMinutes);
         return map;

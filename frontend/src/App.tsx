@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { StopList, Stop } from './components/StopList'
 import { TransitMap } from './components/TransitMap'
 import { Timeline } from './components/Timeline'
@@ -14,6 +14,15 @@ function makeStop(stayMinutes = 0): Stop {
 type Tab = 'plan' | 'timeline'
 
 export default function App() {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    return (localStorage.getItem('theme') as 'light' | 'dark') ?? 'light'
+  })
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
   const mapsReady = useGoogleMaps(GOOGLE_MAPS_KEY)
 
   const [stops, setStops] = useState<Stop[]>([
@@ -32,15 +41,19 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   // selectedOptions[i] = which alternative index is selected for leg i
   const [selectedOptions, setSelectedOptions] = useState<number[]>([])
+  const [routingPreference, setRoutingPreference] = useState<string>('')
+  const [transitModes, setTransitModes] = useState<string[]>([])
 
   async function planRoute() {
     const filled = stops.filter(s => s.name.trim())
-    // if (filled.length < 2) { setError('Enter at least an origin and destination.'); return }
+    if (filled.length < 2) { setError('Enter at least an origin and destination.'); return }
     setLoading(true); setError(null)
     try {
       const payload = {
         departureTime,
         optimiseOrder: false,
+        routingPreference: routingPreference || null,
+        transitModes,
         stops: stops.map(s => ({
           name: s.name,
           lat: s.place?.lat  ?? null,
@@ -88,18 +101,28 @@ export default function App() {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* ── Left panel ── */}
-      <div className="w-96 bg-white border-r border-gray-100 flex flex-col overflow-hidden flex-shrink-0">
+      <div className="w-96 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 flex flex-col overflow-hidden flex-shrink-0">
 
         {/* Header */}
-        <div className="px-5 pt-4 pb-3 border-b border-gray-100 flex-shrink-0">
-          <h1 className="font-medium text-sm">🚌 Transit Router</h1>
+        <div className="px-5 pt-4 pb-3 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <h1 className="font-medium text-sm dark:text-gray-100">🚌 Transit Router</h1>
+            <div className="flex items-center gap-1 bg-gray-300 dark:bg-gray-800 rounded-lg p-0.5">
+              <button onClick={() => setTheme('light')} className={theme === 'light' ? 'bg-white rounded-md px-2 py-1 shadow-sm' : 'px-2 py-1 opacity-40'}>
+                ☀️
+              </button>
+              <button onClick={() => setTheme('dark')} className={theme === 'dark' ? 'bg-white rounded-md px-2 py-1 shadow-sm' : 'px-2 py-1 opacity-40'}>
+                🌙
+              </button>
+            </div>
+          </div>
           <p className="text-xs text-gray-400 mt-0.5">
             {mapsReady ? 'Places autocomplete active' : 'Set VITE_GOOGLE_MAPS_API_KEY in .env.local'}
           </p>
         </div>
 
         {/* Tab bar */}
-        <div className="flex gap-1 px-5 pt-3 pb-0 border-b border-gray-100 flex-shrink-0">
+        <div className="flex gap-1 px-5 pt-3 pb-0 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
           {(['plan', 'timeline'] as Tab[]).map(t => (
             <button
               key={t}
@@ -107,8 +130,8 @@ export default function App() {
               className={[
                 'px-3 py-1.5 text-xs rounded-t-md capitalize border-b-2 transition-colors',
                 tab === t
-                  ? 'border-gray-900 text-gray-900 font-medium'
-                  : 'border-transparent text-gray-400 hover:text-gray-600',
+                  ? 'border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100 font-medium'
+                  : 'border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300',
               ].join(' ')}
             >
               {t}
@@ -132,10 +155,47 @@ export default function App() {
                 type="datetime-local"
                 value={departureTime}
                 onChange={e => setDepartureTime(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 outline-none focus:border-gray-400 focus:bg-white transition-colors"
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-gray-100 outline-none focus:border-gray-400 focus:bg-white dark:focus:bg-gray-700 transition-colors"
               />
             </div>
+            <div>
+              <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">
+                Route preference
+              </label>
+              <select
+                value={routingPreference}
+                onChange={e => setRoutingPreference(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-gray-100 outline-none"
+              >
+                <option value="">Best route</option>
+                <option value="FEWER_TRANSFERS">Fewer transfers</option>
+                <option value="LESS_WALKING">Less walking</option>
+              </select>
+            </div>
 
+            <div>
+              <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">
+                Transport modes
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {['BUS', 'SUBWAY', 'TRAM', 'RAIL'].map(mode => (
+                  <button
+                    key={mode}
+                    onClick={() => setTransitModes(prev =>
+                      prev.includes(mode) ? prev.filter(m => m !== mode) : [...prev, mode]
+                    )}
+                    className={[
+                      'px-3 py-1 text-xs rounded-lg border transition-colors',
+                      transitModes.includes(mode)
+                        ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-900 dark:border-gray-100'
+                        : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700',
+                    ].join(' ')}
+                  >
+                    {mode.charAt(0) + mode.slice(1).toLowerCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div>
               <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">
                 Stops
@@ -144,7 +204,7 @@ export default function App() {
             </div>
 
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+              <div className="text-sm text-red-600 bg-red-50 dark:bg-red-950 dark:text-red-400 border border-red-100 dark:border-red-900 rounded-lg px-3 py-2">
                 {error}
               </div>
             )}
@@ -152,7 +212,7 @@ export default function App() {
             <button
               onClick={planRoute}
               disabled={loading}
-              className="w-full py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl disabled:opacity-40 hover:bg-gray-700 transition-colors"
+              className="w-full py-2.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-medium rounded-xl disabled:opacity-40 hover:bg-gray-700 dark:hover:bg-gray-300 transition-colors"
             >
               {loading ? 'Finding route…' : 'Plan route →'}
             </button>
@@ -168,7 +228,7 @@ export default function App() {
                 onSelectOption={selectOption}
               />
             : (
-              <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
+              <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-600 text-sm">
                 Plan a route to see the timeline
               </div>
             )

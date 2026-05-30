@@ -17,6 +17,10 @@ public class RouteRequest {
 
     private boolean optimiseOrder = false;
 
+    private String routingPreference;
+
+    private List<String> transitModes;
+
     public List<StopInput> getStops() { 
         return stops; 
     }
@@ -39,6 +43,22 @@ public class RouteRequest {
 
     public void setOptimiseOrder(boolean optimiseOrder) { 
         this.optimiseOrder = optimiseOrder; 
+    }
+
+    public String getRoutingPreference() {
+    return routingPreference;
+    }
+
+    public void setRoutingPreference(String routingPreference) {
+        this.routingPreference = routingPreference;
+    }
+
+    public List<String> getTransitModes() {
+        return transitModes;
+    }
+
+    public void setTransitModes(List<String> transitModes) {
+        this.transitModes = transitModes;
     }
 
     public static class StopInput {

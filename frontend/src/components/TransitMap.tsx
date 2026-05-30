@@ -60,29 +60,29 @@ function modeColor(mode: string): string {
 function modeIcon(mode: string) {
   switch (mode?.toUpperCase()) {
     case 'SUBWAY': return '🚇'
-    case 'BUS':    return '🚌'
-    case 'WALK':   return '🚶'
-    case 'TRAM':   return '🚊'
-    case 'FERRY':  return '⛴️'
-    default:       return '🚌'
+    case 'BUS': return '🚌'
+    case 'WALK': return '🚶'
+    case 'TRAM': return '🚊'
+    case 'FERRY': return '⛴️'
+    default: return '🚌'
   }
 }
 
 function modeLabel(mode: string) {
   switch (mode?.toUpperCase()) {
     case 'SUBWAY': return 'Subway'
-    case 'BUS':    return 'Bus'
-    case 'WALK':   return 'Walk'
-    case 'TRAM':   return 'Tram'
-    case 'FERRY':  return 'Ferry'
-    default:       return mode ?? 'Transit'
+    case 'BUS': return 'Bus'
+    case 'WALK': return 'Walk'
+    case 'TRAM': return 'Tram'
+    case 'FERRY': return 'Ferry'
+    default: return mode ?? 'Transit'
   }
 }
 
 export function TransitMap({ result }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const mapRef       = useRef<L.Map | null>(null)
-  const layersRef    = useRef<L.Layer[]>([])
+  const mapRef = useRef<L.Map | null>(null)
+  const layersRef = useRef<L.Layer[]>([])
 
   // Initialise map once
   useEffect(() => {

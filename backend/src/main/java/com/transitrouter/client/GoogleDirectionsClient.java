@@ -25,30 +25,45 @@ public class GoogleDirectionsClient {
 
     private synchronized GeoApiContext ctx() {
         if (context == null) {
-            context = new GeoApiContext.Builder().apiKey(apiKey).build();
+            context = new GeoApiContext.Builder()
+                    .apiKey(apiKey)
+                    .build();
         }
         return context;
     }
 
-    /* Returns best route only (used for TSP probing) */
+    /** Returns best route only (used for TSP probing) */
     @Cacheable(value = "legs", key = "#origin + ':' + #destination + ':' + #departureEpochSeconds")
     public LegResult fetchTransitLeg(String origin, String destination, long departureEpochSeconds) {
-        List<LegResult> results = fetchTransitLegs(origin, destination, departureEpochSeconds);
+        List<LegResult> results = fetchTransitLegs(origin, destination, departureEpochSeconds, null, null);
         return results.get(0);
     }
 
-    /* Returns all alternative routes (up to 3) */
-    @Cacheable(value = "legAlternatives", key = "#origin + ':' + #destination + ':' + #departureEpochSeconds")
-    public List<LegResult> fetchTransitLegs(String origin, String destination, long departureEpochSeconds) {
+    /** Returns all alternative routes (up to 3) */
+    @Cacheable(value = "legAlternatives", key = "#origin + ':' + #destination + ':' + #departureEpochSeconds + ':' + #routingPreference + ':' + #transitModes")
+    public List<LegResult> fetchTransitLegs(String origin, String destination, long departureEpochSeconds,
+            String routingPreference, List<String> transitModes) {
         log.info("Fetching leg alternatives: {} -> {} at epoch {}", origin, destination, departureEpochSeconds);
         try {
-            DirectionsResult result = DirectionsApi.newRequest(ctx())
+            var request = DirectionsApi.newRequest(ctx())
                     .origin(origin)
                     .destination(destination)
                     .mode(TravelMode.TRANSIT)
                     .alternatives(true)
-                    .departureTime(Instant.ofEpochSecond(departureEpochSeconds))
-                    .await();
+                    .departureTime(Instant.ofEpochSecond(departureEpochSeconds));
+
+            if (routingPreference != null && !routingPreference.isBlank()) {
+                request.transitRoutingPreference(TransitRoutingPreference.valueOf(routingPreference));
+            }
+
+            if (transitModes != null && !transitModes.isEmpty()) {
+                TransitMode[] modes = transitModes.stream()
+                        .map(TransitMode::valueOf)
+                        .toArray(TransitMode[]::new);
+                request.transitMode(modes);
+            }
+
+            DirectionsResult result = request.await();
 
             if (result.routes == null || result.routes.length == 0) {
                 throw new RuntimeException("No transit route found from " + origin + " to " + destination);
@@ -84,7 +99,9 @@ public class GoogleDirectionsClient {
                 s.polyline = decodePolyline(step.polyline.getEncodedPath());
             }
             if (step.transitDetails != null) {
-                s.line = step.transitDetails.line.shortName != null ? step.transitDetails.line.shortName : step.transitDetails.line.name;
+                s.line = step.transitDetails.line.shortName != null
+                        ? step.transitDetails.line.shortName
+                        : step.transitDetails.line.name;
                 s.vehicleType = step.transitDetails.line.vehicle.type.name();
                 s.departureStop = step.transitDetails.departureStop.name;
                 s.arrivalStop = step.transitDetails.arrivalStop.name;
@@ -120,26 +137,25 @@ public class GoogleDirectionsClient {
         public List<LatLngPoint> polyline;
         public List<StepDetail> steps;
 
-        public int getDurationSeconds() { 
-            return durationSeconds; 
+        public int getDurationSeconds() {
+            return durationSeconds;
         }
 
         public long getDepartureTimeEpoch() {
-            return departureTimeEpoch; 
+            return departureTimeEpoch;
         }
 
         public long getArrivalTimeEpoch() {
-            return arrivalTimeEpoch; 
+            return arrivalTimeEpoch;
         }
 
         public List<LatLngPoint> getPolyline() {
-            return polyline; 
+            return polyline;
         }
 
         public List<StepDetail> getSteps() {
-            return steps; 
+            return steps;
         }
-
     }
 
     public static class StepDetail {
@@ -152,56 +168,54 @@ public class GoogleDirectionsClient {
         public int durationSeconds;
         public List<LatLngPoint> polyline;
 
-        public String getInstruction() { 
-            return instruction; 
+        public String getInstruction() {
+            return instruction;
         }
 
-        public String getMode() { 
-            return mode; 
+        public String getMode() {
+            return mode;
         }
 
-        public String getLine() { 
+        public String getLine() {
             return line;
         }
 
-        public String getVehicleType() { 
-            return vehicleType; 
+        public String getVehicleType() {
+            return vehicleType;
         }
 
-        public String getDepartureStop() { 
-            return departureStop; 
+        public String getDepartureStop() {
+            return departureStop;
         }
 
-        public String getArrivalStop() { 
-            return arrivalStop; 
+        public String getArrivalStop() {
+            return arrivalStop;
         }
 
-        public int getDurationSeconds() { 
-            return durationSeconds; 
+        public int getDurationSeconds() {
+            return durationSeconds;
         }
 
-        public List<LatLngPoint> getPolyline() { 
-            return polyline; 
+        public List<LatLngPoint> getPolyline() {
+            return polyline;
         }
-
     }
 
     public static class LatLngPoint {
         public final double lat;
         public final double lng;
 
-        public LatLngPoint(double lat, double lng) { 
-            this.lat = lat; 
-            this.lng = lng; 
+        public LatLngPoint(double lat, double lng) {
+            this.lat = lat;
+            this.lng = lng;
         }
 
-        public double getLat() { 
-            return lat; 
+        public double getLat() {
+            return lat;
         }
 
-        public double getLng() { 
-            return lng; 
+        public double getLng() {
+            return lng;
         }
-
     }
 }
