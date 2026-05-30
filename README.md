@@ -1,6 +1,17 @@
-# 🚌 Multi-Stop Transit Router
+# MULTISTOP
 
-Solves the problem that major mapping apps (Google Maps, Apple Maps) disable multi-stop routing in transit mode because they can't handle time-dependent layovers. This app orchestrates sequential, time-shifted transit queries into a single unified itinerary.
+This project serves as a transit router, to solve the problem that major mapping apps (Google Maps, Apple Maps) disable multi-stop routing in transit mode because they can't handle time-dependent layovers. This app orchestrates sequential, time-shifted transit queries into a single unified itinerary.
+
+---
+
+
+## Project Inspiration
+
+If you've ever tried to plan a trip with multiple stops on public transport, you'll know the frustration — Google Maps, Apple Maps, and most other mapping apps simply don't support adding waypoints in transit mode. You're limited to a single origin and destination at any one time.
+
+This means a commuter who wants to, say, stop by a mall before heading to a friend's place has to manually search each leg of the journey separately, mentally track the arrival times, and figure out for themselves whether the overall route makes sense. A few extra clicks doesn't sound like much, but the cognitive overhead of stitching together time-dependent legs, where missing a connection changes everything, adds up quickly.
+
+This app was built to close that gap: enter all your stops once, set how long you plan to stay at each, and get a single unified itinerary. It won't replace Google Maps for most trips, but for the multi-stop commuter, it removes a genuinely annoying limitation.
 
 ---
 
@@ -8,27 +19,27 @@ Solves the problem that major mapping apps (Google Maps, Apple Maps) disable mul
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  React Frontend (Vite / TypeScript)                     │
+│  React Frontend (Vite / TypeScript)                      │
 │  ┌──────────────┐  ┌─────────────────┐  ┌────────────┐  │
 │  │  Stop Planner│  │  Timeline View  │  │ Leaflet Map│  │
 │  └──────────────┘  └─────────────────┘  └────────────┘  │
 └───────────────────────┬─────────────────────────────────┘
                         │ POST /api/transit/route
 ┌───────────────────────▼─────────────────────────────────┐
-│  Spring Boot Backend                                    │
-│                                                         │
-│  TransitController                                      │
-│       │                                                 │
-│  TransitOrchestrationService  ◄── The Brain             │
-│       │                                                 │
-│       │  For each consecutive stop pair:                │
-│       │    1. Query API at cursor time                  │
-│       │    2. Parse arrival time                        │
-│       │    3. Add layover → new cursor                  │
-│       │    4. Query next leg at new cursor              │
-│       │                                                 │
-│  GoogleDirectionsClient  (Caffeine cache)               │
-│       │                                                 │
+│  Spring Boot Backend                                      │
+│                                                          │
+│  TransitController                                        │
+│       │                                                  │
+│  TransitOrchestrationService  ◄── The Brain              │
+│       │                                                  │
+│       │  For each consecutive stop pair:                 │
+│       │    1. Query API at cursor time                   │
+│       │    2. Parse arrival time                         │
+│       │    3. Add layover → new cursor                   │
+│       │    4. Query next leg at new cursor               │
+│       │                                                  │
+│  GoogleDirectionsClient  (Caffeine cache)                │
+│       │                                                  │
 └───────┼─────────────────────────────────────────────────┘
         │ HTTPS
   Google Directions API
