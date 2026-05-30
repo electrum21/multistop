@@ -1,0 +1,17 @@
+server.port=8080
+spring.application.name=transit-router
+
+# Google Maps Directions API key
+# Get one at https://console.cloud.google.com — enable "Directions API"
+transit.google.api-key=${GOOGLE_MAPS_API_KEY:YOUR_KEY_HERE}
+
+# Optional: Use OpenTripPlanner instead of Google
+# transit.otp.base-url=http://localhost:8080/otp/routers/default/plan
+transit.provider=google   # google | otp
+
+# Caching: avoid hammering the API for identical leg queries
+spring.cache.type=caffeine
+spring.cache.caffeine.spec=maximumSize=500,expireAfterWrite=5m
+
+# CORS — allow the React dev server
+transit.cors.allowed-origins=http://localhost:3000,http://localhost:5173
