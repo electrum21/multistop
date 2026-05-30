@@ -32,7 +32,6 @@ export default function App() {
   ])
   const [departureTime, setDepartureTime] = useState(() => {
     const d = new Date()
-    d.setHours(18, 30, 0, 0)
     return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
   })
   const [tab, setTab] = useState<Tab>('plan')
@@ -47,6 +46,22 @@ export default function App() {
   async function planRoute() {
     const filled = stops.filter(s => s.name.trim())
     if (filled.length < 2) { setError('Enter at least an origin and destination.'); return }
+
+    // Check for empty waypoints (stops in the middle that have no name)
+    const emptyWaypoints = stops
+      .slice(1, -1) // only intermediates
+      .map((s, i) => ({ s, idx: i + 1 }))
+      .filter(({ s }) => !s.name.trim())
+
+    if (emptyWaypoints.length > 0) {
+      const labels = emptyWaypoints.map(({ idx }) => `waypoint ${idx}`)
+      setError(`Please fill in or remove: ${labels.join(', ')}.`)
+      return
+    }
+
+    if (!stops[0].name.trim()) { setError('Please enter an origin.'); return }
+    if (!stops[stops.length - 1].name.trim()) { setError('Please enter a destination.'); return }
+
     setLoading(true); setError(null)
     try {
       const payload = {
@@ -106,7 +121,7 @@ export default function App() {
         {/* Header */}
         <div className="px-5 pt-4 pb-3 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
           <div className="flex items-center justify-between">
-            <h1 className="font-medium text-sm dark:text-gray-100">🚌 Transit Router</h1>
+            <h1 className="font-identity text-2xl dark:text-gray-100">MULTISTOP</h1>
             <div className="flex items-center gap-1 bg-gray-300 dark:bg-gray-800 rounded-lg p-0.5">
               <button onClick={() => setTheme('light')} className={theme === 'light' ? 'bg-white rounded-md px-2 py-1 shadow-sm' : 'px-2 py-1 opacity-40'}>
                 ☀️
@@ -116,19 +131,16 @@ export default function App() {
               </button>
             </div>
           </div>
-          <p className="text-xs text-gray-400 mt-0.5">
-            {mapsReady ? 'Places autocomplete active' : 'Set VITE_GOOGLE_MAPS_API_KEY in .env.local'}
-          </p>
         </div>
 
         {/* Tab bar */}
-        <div className="flex gap-1 px-5 pt-3 pb-0 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
+        <div className="font-identity flex gap-1 px-5 pt-3 pb-0 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
           {(['plan', 'timeline'] as Tab[]).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={[
-                'px-3 py-1.5 text-xs rounded-t-md capitalize border-b-2 transition-colors',
+                'px-3 py-1.5 text-m rounded-t-md capitalize border-b-2 transition-colors',
                 tab === t
                   ? 'border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100 font-medium'
                   : 'border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300',
@@ -148,8 +160,8 @@ export default function App() {
         {tab === 'plan' && (
           <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">
-                Departure time
+              <label className="font-identity block text-sm font-large uppercase tracking-wide text-gray-400 mb-2">
+                Departure Time
               </label>
               <input
                 type="datetime-local"
@@ -159,8 +171,8 @@ export default function App() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">
-                Route preference
+              <label className="font-identity block text-sm font-medium uppercase tracking-wide text-gray-400 mb-2">
+                Route Preference
               </label>
               <select
                 value={routingPreference}
@@ -174,7 +186,7 @@ export default function App() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">
+              <label className="font-identity block text-sm font-medium uppercase tracking-wide text-gray-400 mb-2">
                 Transport modes
               </label>
               <div className="flex flex-wrap gap-2">
@@ -197,7 +209,7 @@ export default function App() {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wide text-gray-400 mb-2">
+              <label className="font-identity block text-sm font-medium uppercase tracking-wide text-gray-400 mb-2">
                 Stops
               </label>
               <StopList stops={stops} onChange={setStops} />

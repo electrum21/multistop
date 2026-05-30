@@ -47,12 +47,42 @@ export function PlaceAutocomplete({
   const [open, setOpen] = useState(false)
   const [activeIdx, setActiveIdx] = useState(-1)
   const [loading, setLoading] = useState(false)
+  const [geoOption, setGeoOption] = useState<{ label: string; place: ResolvedPlace } | null>(null)
+  const [geoLoading, setGeoLoading] = useState(false)
 
   function getServices() {
     if (!window.google?.maps?.places) return null
     if (!svcRef.current) svcRef.current = new google.maps.places.AutocompleteService()
     if (!gcRef.current) gcRef.current = new google.maps.Geocoder()
     return { svc: svcRef.current, gc: gcRef.current }
+  }
+
+  function fetchCurrentLocation() {
+    if (!navigator.geolocation) return
+    setGeoLoading(true)
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const { latitude: lat, longitude: lng } = pos.coords
+        const services = getServices()
+        if (!services) { setGeoLoading(false); return }
+        services.gc.geocode({ location: { lat, lng } }, (results, status) => {
+          setGeoLoading(false)
+          if (status !== 'OK' || !results?.[0]) return
+          const r = results[0]
+          setGeoOption({
+            label: r.formatted_address,
+            place: {
+              placeId: r.place_id,
+              name: r.formatted_address,
+              lat,
+              lng,
+              formattedAddress: r.formatted_address,
+            },
+          })
+        })
+      },
+      () => setGeoLoading(false)
+    )
   }
 
   const fetchPredictions = useDebounce((input: string) => {
@@ -108,27 +138,52 @@ export function PlaceAutocomplete({
     onCommit?.()
   }
 
+  function selectGeoOption() {
+    if (!geoOption) return
+    onChange(geoOption.place.name, geoOption.place)
+    setOpen(false)
+    setGeoOption(null)
+    onCommit?.()
+  }
+
   function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value
     onChange(val, null)
+    setGeoOption(null)
     if (val.length >= 2) fetchPredictions(val)
     else { setPredictions([]); setOpen(false) }
   }
 
+  function handleFocus() {
+    if (value.length >= 2 && predictions.length) {
+      setOpen(true)
+    } else if (!value) {
+      setOpen(true)
+    }
+  }
+
+  // geoOffset only counts once location is resolved (for keyboard nav index)
+  const geoOffset = !value && geoOption ? 1 : 0
+  const totalItems = geoOffset + predictions.length
+
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
-    if (!open || !predictions.length) {
+    if (!open || totalItems === 0) {
       if (e.key === 'Enter' || e.key === 'Tab') onCommit?.()
       return
     }
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setActiveIdx(i => Math.min(i + 1, predictions.length - 1))
+      setActiveIdx(i => Math.min(i + 1, totalItems - 1))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setActiveIdx(i => Math.max(i - 1, 0))
     } else if (e.key === 'Enter') {
       e.preventDefault()
-      if (activeIdx >= 0) resolveAndSelect(predictions[activeIdx])
+      if (activeIdx === 0 && geoOffset === 1) {
+        selectGeoOption()
+      } else if (activeIdx >= geoOffset) {
+        resolveAndSelect(predictions[activeIdx - geoOffset])
+      }
     } else if (e.key === 'Escape') {
       setOpen(false)
       setActiveIdx(-1)
@@ -152,6 +207,7 @@ export function PlaceAutocomplete({
   }, [])
 
   const isResolved = !!resolvedPlace
+  const showDropdown = open && (!value || predictions.length > 0)
 
   return (
     <div className={`pac-container-wrap relative ${className ?? ''}`}>
@@ -164,7 +220,7 @@ export function PlaceAutocomplete({
           disabled={disabled}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
-          onFocus={() => value.length >= 2 && predictions.length && setOpen(true)}
+          onFocus={handleFocus}
           autoComplete="off"
           className={[
             'w-full px-3 py-2 pr-8 text-sm rounded-lg border outline-none transition-colors',
@@ -203,29 +259,66 @@ export function PlaceAutocomplete({
         ) : null}
       </div>
 
-      {open && predictions.length > 0 && (
+      {showDropdown && (
         <ul
           ref={listRef}
           id={`pac-list-${placeholder}`}
           role="listbox"
           className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-lg"
         >
+          {/* Current location row — always shown when field is empty */}
+          {!value && (
+            geoLoading ? (
+              <li className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-400 border-b border-gray-100 dark:border-gray-700">
+                <span className="text-base animate-spin">⟳</span>
+                Locating…
+              </li>
+            ) : geoOption ? (
+              <li
+                id="pac-item-0"
+                role="option"
+                aria-selected={activeIdx === 0}
+                onMouseDown={e => { e.preventDefault(); selectGeoOption() }}
+                onMouseEnter={() => setActiveIdx(0)}
+                className={[
+                  'flex items-start gap-2.5 px-3 py-2.5 cursor-pointer text-sm border-b border-gray-100 dark:border-gray-700',
+                  activeIdx === 0 ? 'bg-gray-50 dark:bg-gray-700' : 'hover:bg-gray-50 dark:hover:bg-gray-700',
+                ].join(' ')}
+              >
+                <span>
+                  <span className="font-medium text-blue-600 dark:text-blue-400 block leading-snug">Current location</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500 leading-tight block">{geoOption.label}</span>
+                </span>
+              </li>
+            ) : (
+              <li
+                role="option"
+                onMouseDown={e => { e.preventDefault(); fetchCurrentLocation() }}
+                className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer text-sm border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                <span className="flex-shrink-0">📍</span>
+                <span className="font-medium text-blue-600 dark:text-blue-400">Use my current location</span>
+              </li>
+            )
+          )}
+
+          {/* Place predictions */}
           {predictions.map((p, i) => (
             <li
               key={p.placeId}
-              id={`pac-item-${i}`}
+              id={`pac-item-${i + geoOffset}`}
               role="option"
-              aria-selected={i === activeIdx}
+              aria-selected={i + geoOffset === activeIdx}
               onMouseDown={e => { e.preventDefault(); resolveAndSelect(p) }}
-              onMouseEnter={() => setActiveIdx(i)}
+              onMouseEnter={() => setActiveIdx(i + geoOffset)}
               className={[
                 'flex items-start gap-2.5 px-3 py-2.5 cursor-pointer text-sm border-b border-gray-50 dark:border-gray-700 last:border-0',
-                i === activeIdx ? 'bg-gray-50 dark:bg-gray-700' : 'hover:bg-gray-50 dark:hover:bg-gray-700',
+                i + geoOffset === activeIdx ? 'bg-gray-50 dark:bg-gray-700' : 'hover:bg-gray-50 dark:hover:bg-gray-700',
               ].join(' ')}
             >
-              <span className="mt-0.5 text-gray-400 flex-shrink-0" aria-hidden="true">
+              {/* <span className="mt-0.5 text-gray-400 flex-shrink-0" aria-hidden="true">
                 {p.isTransit ? '🚉' : '📍'}
-              </span>
+              </span> */}
               <span>
                 <span className="font-medium text-gray-900 dark:text-gray-100 block leading-snug">{p.mainText}</span>
                 {p.secondaryText && (
@@ -234,6 +327,7 @@ export function PlaceAutocomplete({
               </span>
             </li>
           ))}
+
           <li className="px-3 py-1.5 text-right" aria-hidden="true">
             <img
               src="https://maps.gstatic.com/mapfiles/api-3/images/powered-by-google-on-white3.png"

@@ -85,8 +85,12 @@ public class GoogleDirectionsClient {
 
         LegResult result = new LegResult();
         result.durationSeconds = (int) leg.duration.inSeconds;
-        result.departureTimeEpoch = leg.departureTime.toInstant().getEpochSecond();
-        result.arrivalTimeEpoch = leg.arrivalTime.toInstant().getEpochSecond();
+        result.departureTimeEpoch = leg.departureTime != null
+        ? leg.departureTime.toInstant().getEpochSecond()
+        : Instant.now().getEpochSecond();          // fallback: now
+        result.arrivalTimeEpoch = leg.arrivalTime != null
+        ? leg.arrivalTime.toInstant().getEpochSecond()
+        : Instant.now().plusSeconds(leg.duration.inSeconds).getEpochSecond(); // fallback: now + duration
         result.polyline = decodePolyline(route.overviewPolyline.getEncodedPath());
 
         List<StepDetail> steps = new ArrayList<>();

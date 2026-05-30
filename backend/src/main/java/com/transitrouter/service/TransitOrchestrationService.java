@@ -76,10 +76,10 @@ public class TransitOrchestrationService {
             }
 
             if (i < stops.size() - 2) {
-                Instant nextDeparture = arrival.plusSeconds((long) from.getStayMinutes() * 60);
-                stopMeta.add(buildStopMeta(to, arrival, nextDeparture, from.getStayMinutes()));
+                Instant nextDeparture = arrival.plusSeconds((long) to.getStayMinutes() * 60); // from → to
+                stopMeta.add(buildStopMeta(to, arrival, nextDeparture, to.getStayMinutes())); // from → to
                 log.info("  Arrived {}. Staying {} min. Next departure: {}",
-                        TIME_FMT.format(arrival), from.getStayMinutes(), TIME_FMT.format(nextDeparture));
+                        TIME_FMT.format(arrival), to.getStayMinutes(), TIME_FMT.format(nextDeparture));
                 cursor = nextDeparture;
             } else {
                 stopMeta.add(buildStopMeta(to, arrival, null, 0));

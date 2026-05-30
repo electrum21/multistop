@@ -10,3 +10,10 @@ html, body, #root {
 /* Fix Leaflet z-index inside flex containers */
 .leaflet-pane { z-index: 40 !important; }
 .leaflet-control { z-index: 50 !important; }
+
+@font-face {
+  font-family: 'LTAIdentity';
+  src: url('./assets/fonts/LTAIdentity.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}

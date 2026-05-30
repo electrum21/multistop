@@ -8,27 +8,27 @@ Solves the problem that major mapping apps (Google Maps, Apple Maps) disable mul
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  React Frontend (Vite / TypeScript)                      │
+│  React Frontend (Vite / TypeScript)                     │
 │  ┌──────────────┐  ┌─────────────────┐  ┌────────────┐  │
 │  │  Stop Planner│  │  Timeline View  │  │ Leaflet Map│  │
 │  └──────────────┘  └─────────────────┘  └────────────┘  │
 └───────────────────────┬─────────────────────────────────┘
                         │ POST /api/transit/route
 ┌───────────────────────▼─────────────────────────────────┐
-│  Spring Boot Backend                                      │
-│                                                          │
-│  TransitController                                        │
-│       │                                                  │
-│  TransitOrchestrationService  ◄── The Brain              │
-│       │                                                  │
-│       │  For each consecutive stop pair:                 │
-│       │    1. Query API at cursor time                   │
-│       │    2. Parse arrival time                         │
-│       │    3. Add layover → new cursor                   │
-│       │    4. Query next leg at new cursor               │
-│       │                                                  │
-│  GoogleDirectionsClient  (Caffeine cache)                │
-│       │                                                  │
+│  Spring Boot Backend                                    │
+│                                                         │
+│  TransitController                                      │
+│       │                                                 │
+│  TransitOrchestrationService  ◄── The Brain             │
+│       │                                                 │
+│       │  For each consecutive stop pair:                │
+│       │    1. Query API at cursor time                  │
+│       │    2. Parse arrival time                        │
+│       │    3. Add layover → new cursor                  │
+│       │    4. Query next leg at new cursor              │
+│       │                                                 │
+│  GoogleDirectionsClient  (Caffeine cache)               │
+│       │                                                 │
 └───────┼─────────────────────────────────────────────────┘
         │ HTTPS
   Google Directions API
@@ -120,8 +120,8 @@ Or with coordinates (avoids geocoding round-trip):
       "durationMinutes": 18,
       "mode": "BUS",
       "line": "Bus 73",
-      "polyline": [ { "lat": 1.3508, "lng": 103.8485 }, ... ],
-      "steps": [ ... ]
+      "polyline": [ { "lat": 1.3508, "lng": 103.8485 }, "..." ],
+      "steps": [ "..." ]
     },
     {
       "legIndex": 1,
@@ -129,13 +129,13 @@ Or with coordinates (avoids geocoding round-trip):
       "to":   "Bishan MRT Station",
       "departureTime": "07:33 PM",
       "arrivalTime":   "07:51 PM",
-      ...
+      "..."
     }
   ],
   "stops": [
-    { "name": "Bishan MRT Station",    "arrivalTime": null,       "departureTime": "06:30 PM", "stay": 0  },
-    { "name": "Chomp Chomp Food Centre","arrivalTime": "06:48 PM", "departureTime": "07:33 PM", "stay": 45 },
-    { "name": "Bishan MRT Station",    "arrivalTime": "07:51 PM", "departureTime": null,        "stay": 0  }
+    { "name": "Bishan MRT Station",     "arrivalTime": null,       "departureTime": "06:30 PM", "stay": 0  },
+    { "name": "Chomp Chomp Food Centre", "arrivalTime": "06:48 PM", "departureTime": "07:33 PM", "stay": 45 },
+    { "name": "Bishan MRT Station",     "arrivalTime": "07:51 PM", "departureTime": null,        "stay": 0  }
   ]
 }
 ```
@@ -176,3 +176,9 @@ The `TransitOrchestrationServiceTest` mocks the API client and verifies:
 - Leg 2's departure epoch = leg 1 arrival + stay duration
 - Cumulative time shifts with multiple layovers
 - Response shape validation
+
+---
+
+## Credits
+
+- **LTA Identity Font** — UI typography uses a reconstruction of the LTA Identity typeface by [jglim](https://github.com/jglim/IdentityFont), a humanistic sans-serif font found in Singapore's public transport graphics. Used under the terms of that repository.

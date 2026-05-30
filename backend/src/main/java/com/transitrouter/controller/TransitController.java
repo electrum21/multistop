@@ -27,7 +27,17 @@ public class TransitController {
             @Valid @RequestBody RouteRequest request) {
         log.info("Route request: {} stops, depart {}, optimise={}",
                 request.getStops().size(), request.getDepartureTime(), request.isOptimiseOrder());
-        return ResponseEntity.ok(orchestrationService.planRoute(request));
+        try {
+            return ResponseEntity.ok(orchestrationService.planRoute(request));
+        } catch (RuntimeException e) {
+            String msg = e.getMessage() != null ? e.getMessage() : "";
+            boolean noRoute = msg.contains("null") || msg.isBlank() || msg.contains("No transit route");
+            String userMessage = noRoute
+                    ? "No transit route found between these stops. Try different locations or a different departure time."
+                    : msg;
+            return ResponseEntity.unprocessableEntity()
+                    .body(Map.of("error", userMessage));
+        }
     }
 
     @GetMapping("/health")
