@@ -19,27 +19,27 @@ This app was built to close that gap: enter all your stops once, set how long yo
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  React Frontend (Vite / TypeScript)                      │
+│  React Frontend (Vite / TypeScript)                     │
 │  ┌──────────────┐  ┌─────────────────┐  ┌────────────┐  │
 │  │  Stop Planner│  │  Timeline View  │  │ Leaflet Map│  │
 │  └──────────────┘  └─────────────────┘  └────────────┘  │
 └───────────────────────┬─────────────────────────────────┘
                         │ POST /api/transit/route
 ┌───────────────────────▼─────────────────────────────────┐
-│  Spring Boot Backend                                      │
-│                                                          │
-│  TransitController                                        │
-│       │                                                  │
-│  TransitOrchestrationService  ◄── The Brain              │
-│       │                                                  │
-│       │  For each consecutive stop pair:                 │
-│       │    1. Query API at cursor time                   │
-│       │    2. Parse arrival time                         │
-│       │    3. Add layover → new cursor                   │
-│       │    4. Query next leg at new cursor               │
-│       │                                                  │
-│  GoogleDirectionsClient  (Caffeine cache)                │
-│       │                                                  │
+│  Spring Boot Backend                                    │
+│                                                         │
+│  TransitController                                      │
+│       │                                                 │
+│  TransitOrchestrationService  ◄── The Brain             │
+│       │                                                 │
+│       │  For each consecutive stop pair:                │
+│       │    1. Query API at cursor time                  │
+│       │    2. Parse arrival time                        │
+│       │    3. Add layover → new cursor                  │
+│       │    4. Query next leg at new cursor              │
+│       │                                                 │
+│  GoogleDirectionsClient  (Caffeine cache)               │
+│       │                                                 │
 └───────┼─────────────────────────────────────────────────┘
         │ HTTPS
   Google Directions API

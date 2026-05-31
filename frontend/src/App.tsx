@@ -40,6 +40,8 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   // selectedOptions[i] = which alternative index is selected for leg i
   const [selectedOptions, setSelectedOptions] = useState<number[]>([])
+  // highlightedLeg = index of the leg currently highlighted on the map (null = none)
+  const [highlightedLeg, setHighlightedLeg] = useState<number | null>(null)
   const [routingPreference, setRoutingPreference] = useState<string>('')
   const [transitModes, setTransitModes] = useState<string[]>([])
 
@@ -190,7 +192,7 @@ export default function App() {
                 Transport modes
               </label>
               <div className="flex flex-wrap gap-2">
-                {['BUS', 'SUBWAY', 'TRAM', 'RAIL'].map(mode => (
+                {['BUS', 'TRAIN', 'TRAM', 'RAIL'].map(mode => (
                   <button
                     key={mode}
                     onClick={() => setTransitModes(prev =>
@@ -238,6 +240,8 @@ export default function App() {
                 result={result}
                 selectedOptions={selectedOptions}
                 onSelectOption={selectOption}
+                highlightedLeg={highlightedLeg}
+                onHighlightLeg={setHighlightedLeg}
               />
             : (
               <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-600 text-sm">
@@ -249,7 +253,7 @@ export default function App() {
 
       {/* ── Right: Map ── */}
       <div className="flex-1 relative">
-        <TransitMap result={activeResult} />
+        <TransitMap result={activeResult} highlightedLeg={highlightedLeg} theme={theme} />
         {!result && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400 pointer-events-none">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true">
