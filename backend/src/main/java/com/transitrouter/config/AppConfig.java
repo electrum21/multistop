@@ -36,10 +36,4 @@ class GlobalExceptionHandler {
         return ResponseEntity.badRequest()
                 .body(Map.of("status", 400, "error", ex.getMessage() != null ? ex.getMessage() : "Bad request"));
     }
-
-    @ExceptionHandler(RuntimeException.class)
-    ResponseEntity<Map<String, Object>> handleRuntime(RuntimeException ex) {
-        return ResponseEntity.internalServerError()
-                .body(Map.of("status", 500, "error", ex.getMessage() != null ? ex.getMessage() : "Internal error"));
-    }
 }

@@ -8,7 +8,7 @@ import java.util.List;
 public class RouteRequest {
 
     @NotNull
-    @Size(min = 2, max = 10, message = "Must have between 2 and 10 stops")
+    @Size(min = 2, max = 5, message = "Must have between 2 and 5 stops")
     @Valid
     private List<StopInput> stops;
 
@@ -21,32 +21,32 @@ public class RouteRequest {
 
     private List<String> transitModes;
 
-    public List<StopInput> getStops() { 
-        return stops; 
+    public List<StopInput> getStops() {
+        return stops;
     }
 
     public void setStops(List<StopInput> stops) {
-         this.stops = stops; 
+        this.stops = stops;
     }
 
-    public LocalDateTime getDepartureTime() { 
-        return departureTime; 
+    public LocalDateTime getDepartureTime() {
+        return departureTime;
     }
 
-    public void setDepartureTime(LocalDateTime departureTime) { 
-        this.departureTime = departureTime; 
+    public void setDepartureTime(LocalDateTime departureTime) {
+        this.departureTime = departureTime;
     }
 
-    public boolean isOptimiseOrder() { 
-        return optimiseOrder; 
+    public boolean isOptimiseOrder() {
+        return optimiseOrder;
     }
 
-    public void setOptimiseOrder(boolean optimiseOrder) { 
-        this.optimiseOrder = optimiseOrder; 
+    public void setOptimiseOrder(boolean optimiseOrder) {
+        this.optimiseOrder = optimiseOrder;
     }
 
     public String getRoutingPreference() {
-    return routingPreference;
+        return routingPreference;
     }
 
     public void setRoutingPreference(String routingPreference) {
@@ -72,36 +72,36 @@ public class RouteRequest {
         @Min(0) @Max(1440)
         private int stayMinutes = 0;
 
-        public String getName() { 
-            return name; 
+        public String getName() {
+            return name;
         }
 
-        public void setName(String name) { 
-            this.name = name; 
+        public void setName(String name) {
+            this.name = name;
         }
 
-        public Double getLat() { 
-            return lat; 
+        public Double getLat() {
+            return lat;
         }
 
-        public void setLat(Double lat) { 
-            this.lat = lat; 
+        public void setLat(Double lat) {
+            this.lat = lat;
         }
 
-        public Double getLng() { 
-            return lng; 
+        public Double getLng() {
+            return lng;
         }
 
-        public void setLng(Double lng) { 
-            this.lng = lng; 
+        public void setLng(Double lng) {
+            this.lng = lng;
         }
 
-        public int getStayMinutes() { 
-            return stayMinutes; 
+        public int getStayMinutes() {
+            return stayMinutes;
         }
 
-        public void setStayMinutes(int stayMinutes) { 
-            this.stayMinutes = stayMinutes; 
+        public void setStayMinutes(int stayMinutes) {
+            this.stayMinutes = stayMinutes;
         }
     }
 }

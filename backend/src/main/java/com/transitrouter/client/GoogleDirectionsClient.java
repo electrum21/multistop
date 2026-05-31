@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PreDestroy;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +31,13 @@ public class GoogleDirectionsClient {
                     .build();
         }
         return context;
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        if (context != null) {
+            context.shutdown();
+        }
     }
 
     /** Returns best route only (used for TSP probing) */
@@ -84,35 +92,35 @@ public class GoogleDirectionsClient {
         DirectionsLeg leg = route.legs[0];
 
         LegResult result = new LegResult();
-        result.durationSeconds = (int) leg.duration.inSeconds;
-        result.departureTimeEpoch = leg.departureTime != null
-        ? leg.departureTime.toInstant().getEpochSecond()
-        : Instant.now().getEpochSecond();          // fallback: now
-        result.arrivalTimeEpoch = leg.arrivalTime != null
-        ? leg.arrivalTime.toInstant().getEpochSecond()
-        : Instant.now().plusSeconds(leg.duration.inSeconds).getEpochSecond(); // fallback: now + duration
-        result.polyline = decodePolyline(route.overviewPolyline.getEncodedPath());
+        result.setDurationSeconds((int) leg.duration.inSeconds);
+        result.setDepartureTimeEpoch(leg.departureTime != null
+                ? leg.departureTime.toInstant().getEpochSecond()
+                : Instant.now().getEpochSecond());
+        result.setArrivalTimeEpoch(leg.arrivalTime != null
+                ? leg.arrivalTime.toInstant().getEpochSecond()
+                : Instant.now().plusSeconds(leg.duration.inSeconds).getEpochSecond());
+        result.setPolyline(decodePolyline(route.overviewPolyline.getEncodedPath()));
 
         List<StepDetail> steps = new ArrayList<>();
         for (DirectionsStep step : leg.steps) {
             StepDetail s = new StepDetail();
-            s.instruction = step.htmlInstructions.replaceAll("<[^>]+>", "");
-            s.mode = step.travelMode.name();
-            s.durationSeconds = (int) step.duration.inSeconds;
+            s.setInstruction(step.htmlInstructions.replaceAll("<[^>]+>", ""));
+            s.setMode(step.travelMode.name());
+            s.setDurationSeconds((int) step.duration.inSeconds);
             if (step.polyline != null) {
-                s.polyline = decodePolyline(step.polyline.getEncodedPath());
+                s.setPolyline(decodePolyline(step.polyline.getEncodedPath()));
             }
             if (step.transitDetails != null) {
-                s.line = step.transitDetails.line.shortName != null
+                s.setLine(step.transitDetails.line.shortName != null
                         ? step.transitDetails.line.shortName
-                        : step.transitDetails.line.name;
-                s.vehicleType = step.transitDetails.line.vehicle.type.name();
-                s.departureStop = step.transitDetails.departureStop.name;
-                s.arrivalStop = step.transitDetails.arrivalStop.name;
+                        : step.transitDetails.line.name);
+                s.setVehicleType(step.transitDetails.line.vehicle.type.name());
+                s.setDepartureStop(step.transitDetails.departureStop.name);
+                s.setArrivalStop(step.transitDetails.arrivalStop.name);
             }
             steps.add(s);
         }
-        result.steps = steps;
+        result.setSteps(steps);
         return result;
     }
 
@@ -135,73 +143,125 @@ public class GoogleDirectionsClient {
     // ── Inner DTOs ────────────────────────────────────────────────────────
 
     public static class LegResult {
-        public int durationSeconds;
-        public long departureTimeEpoch;
-        public long arrivalTimeEpoch;
-        public List<LatLngPoint> polyline;
-        public List<StepDetail> steps;
+        private int durationSeconds;
+        private long departureTimeEpoch;
+        private long arrivalTimeEpoch;
+        private List<LatLngPoint> polyline;
+        private List<StepDetail> steps;
 
         public int getDurationSeconds() {
             return durationSeconds;
+        }
+
+        public void setDurationSeconds(int v) {
+            this.durationSeconds = v;
         }
 
         public long getDepartureTimeEpoch() {
             return departureTimeEpoch;
         }
 
+        public void setDepartureTimeEpoch(long v) {
+            this.departureTimeEpoch = v;
+        }
+
         public long getArrivalTimeEpoch() {
             return arrivalTimeEpoch;
+        }
+
+        public void setArrivalTimeEpoch(long v) {
+            this.arrivalTimeEpoch = v;
         }
 
         public List<LatLngPoint> getPolyline() {
             return polyline;
         }
 
+        public void setPolyline(List<LatLngPoint> v) {
+            this.polyline = v;
+        }
+
         public List<StepDetail> getSteps() {
             return steps;
+        }
+
+        public void setSteps(List<StepDetail> v) {
+            this.steps = v;
         }
     }
 
     public static class StepDetail {
-        public String instruction;
-        public String mode;
-        public String line;
-        public String vehicleType;
-        public String departureStop;
-        public String arrivalStop;
-        public int durationSeconds;
-        public List<LatLngPoint> polyline;
+        private String instruction;
+        private String mode;
+        private String line;
+        private String vehicleType;
+        private String departureStop;
+        private String arrivalStop;
+        private int durationSeconds;
+        private List<LatLngPoint> polyline;
 
         public String getInstruction() {
             return instruction;
+        }
+
+        public void setInstruction(String v) {
+            this.instruction = v;
         }
 
         public String getMode() {
             return mode;
         }
 
+        public void setMode(String v) {
+            this.mode = v;
+        }
+
         public String getLine() {
             return line;
+        }
+
+        public void setLine(String v) {
+            this.line = v;
         }
 
         public String getVehicleType() {
             return vehicleType;
         }
 
+        public void setVehicleType(String v) {
+            this.vehicleType = v;
+        }
+
         public String getDepartureStop() {
             return departureStop;
+        }
+
+        public void setDepartureStop(String v) {
+            this.departureStop = v;
         }
 
         public String getArrivalStop() {
             return arrivalStop;
         }
 
+        public void setArrivalStop(String v) {
+            this.arrivalStop = v;
+        }
+
         public int getDurationSeconds() {
             return durationSeconds;
         }
 
+        public void setDurationSeconds(int v) {
+            this.durationSeconds = v;
+        }
+
         public List<LatLngPoint> getPolyline() {
             return polyline;
+        }
+
+        public void setPolyline(List<LatLngPoint> v) {
+            this.polyline = v;
         }
     }
 

@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { StopList, Stop } from './components/StopList'
 import { TransitMap } from './components/TransitMap'
 import { Timeline } from './components/Timeline'
 import { useGoogleMaps } from './hooks/useGoogleMaps'
 
 const GOOGLE_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? ''
+
+const DEFAULT_WAYPOINT_STAY_MINUTES = 45
 
 let stopCounter = 10
 function makeStop(stayMinutes = 0): Stop {
@@ -27,7 +29,7 @@ export default function App() {
 
   const [stops, setStops] = useState<Stop[]>([
     makeStop(0),
-    makeStop(45),
+    makeStop(DEFAULT_WAYPOINT_STAY_MINUTES),
     makeStop(0),
   ])
   const [departureTime, setDepartureTime] = useState(() => {
@@ -106,14 +108,16 @@ export default function App() {
     })
   }
 
-  // Build the "active" result — swap each leg for the selected alternative
-  const activeResult = result ? {
-    ...result,
-    legs: result.legs.map((leg: any, i: number) => {
-      const sel = selectedOptions[i] ?? 0
-      return sel === 0 ? leg : (leg.alternatives?.[sel] ?? leg)
-    }),
-  } : null
+  const activeResult = useMemo(() => {
+    if (!result) return null
+    return {
+      ...result,
+      legs: result.legs.map((leg: any, i: number) => {
+        const sel = selectedOptions[i] ?? 0
+        return sel === 0 ? leg : (leg.alternatives?.[sel] ?? leg)
+      }),
+    }
+  }, [result, selectedOptions])
 
   return (
     <div className="flex h-screen overflow-hidden">

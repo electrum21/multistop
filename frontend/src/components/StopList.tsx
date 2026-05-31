@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { PlaceAutocomplete, ResolvedPlace } from './PlaceAutocomplete'
+import { LEG_COLORS } from '../constants.ts'
 
 export interface Stop {
   id: number
@@ -7,8 +8,6 @@ export interface Stop {
   place: ResolvedPlace | null
   stayMinutes: number
 }
-
-const LEG_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
 
 interface Props {
   stops: Stop[]
@@ -29,7 +28,10 @@ export function StopList({ stops, onChange }: Props) {
     onChange(stops.filter(s => s.id !== id))
   }
 
+  const MAX_STOPS = 5
+
   function addStop() {
+    if (stops.length >= MAX_STOPS) return
     const newStop: Stop = { id: Date.now(), name: '', place: null, stayMinutes: 30 }
     const next = [...stops]
     next.splice(next.length - 1, 0, newStop)
@@ -143,13 +145,15 @@ export function StopList({ stops, onChange }: Props) {
         )
       })}
 
-      <button
-        onClick={addStop}
-        className="mt-2 flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-600 dark:hover:text-gray-300 transition-colors w-full"
-      >
-        <span className="text-base leading-none">+</span>
-        Add waypoint
-      </button>
+      {stops.length < MAX_STOPS && (
+        <button
+          onClick={addStop}
+          className="mt-2 flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-600 dark:hover:text-gray-300 transition-colors w-full"
+        >
+          <span className="text-base leading-none">+</span>
+          Add waypoint
+        </button>
+      )}
     </div>
   )
 }

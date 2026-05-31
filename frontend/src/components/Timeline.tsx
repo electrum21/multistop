@@ -1,7 +1,7 @@
-const LEG_COLORS = ['#3B82F6', '#3B82F6', '#3B82F6', '#3B82F6', '#3B82F6', '#3B82F6']
+import { LEG_COLORS } from '../constants.ts'
 
 // Singapore LRT lines reported as TRAM by Google — treat them as SUBWAY
-const LRT_LINES = new Set(['PG', 'SK', 'BP', 'STC', 'CGL'])
+const LRT_LINES = new Set(['PG', 'SK', 'BP'])
 function normaliseMode(mode: string, line?: string): string {
   if (mode?.toUpperCase() === 'TRAM' && line && LRT_LINES.has(line.toUpperCase())) return 'SUBWAY'
   return mode
@@ -201,6 +201,32 @@ function StopCircle({ number, color, isLast }: { number: number; color: string; 
   )
 }
 
+function ViewSegmentButton({ color, highlighted, onEnter, onLeave }: {
+  color: string
+  highlighted: boolean
+  onEnter: () => void
+  onLeave: () => void
+}) {
+  return (
+    <button
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      className="flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all border mt-0.5"
+      style={
+        highlighted
+          ? { background: color, color: '#fff', borderColor: color, boxShadow: `0 0 8px ${color}80` }
+          : { background: 'transparent', color: '#9CA3AF', borderColor: '#E5E7EB' }
+      }
+    >
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+      <span>View Segment</span>
+    </button>
+  )
+}
+
 export function Timeline({ result, selectedOptions, onSelectOption, highlightedLeg, onHighlightLeg }: Props) {
   const { legs, stops, totalDurationMinutes, arrivalTime } = result
 
@@ -261,9 +287,17 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
                     <StopCircle number={stopNum} color={color} />
                     <div className="w-px flex-1 min-h-[8px]" style={{ background: `${color}30` }} />
                   </div>
-                  <div className="pb-1 flex-1 min-w-0">
-                    <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">{active.departureTime}</div>
-                    <div className="text-sm font-medium mt-0.5 truncate dark:text-gray-100">{active.from}</div>
+                  <div className="pb-1 flex-1 min-w-0 flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">{active.departureTime}</div>
+                      <div className="text-sm font-medium mt-0.5 truncate dark:text-gray-100">{active.from}</div>
+                    </div>
+                    <ViewSegmentButton
+                      color={color}
+                      highlighted={highlightedLeg === i}
+                      onEnter={() => onHighlightLeg(i)}
+                      onLeave={() => onHighlightLeg(null)}
+                    />
                   </div>
                 </div>
                 )}
@@ -275,7 +309,7 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
                     <div className="w-px flex-1 min-h-[24px]" style={{ background: `${color}30` }} />
                   </div>
                   <div className="pb-1 flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2">
                       <div className="flex items-center gap-2 mt-0.5 flex-1 min-w-0">
                         <span className="text-xs text-gray-400 dark:text-gray-500 truncate">
                           {modeLabel(normaliseMode(active.mode, active.line))}{active.line ? ` · ${active.line}` : ''} → {active.to}
@@ -287,22 +321,6 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
                           {formatMinutes(active.durationMinutes)}
                         </span>
                       </div>
-                      <button
-                        onMouseEnter={() => onHighlightLeg(i)}
-                        onMouseLeave={() => onHighlightLeg(null)}
-                        className="flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all border mt-0.5"
-                        style={
-                          highlightedLeg === i
-                            ? { background: color, color: '#fff', borderColor: color, boxShadow: `0 0 8px ${color}80` }
-                            : { background: 'transparent', color: '#9CA3AF', borderColor: '#E5E7EB' }
-                        }
-                      >
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                          <circle cx="12" cy="12" r="3"/>
-                        </svg>
-                        <span>View Segment</span>
-                      </button>
                     </div>
 
                     <OptionPicker
@@ -360,11 +378,21 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
                         <StopCircle number={stopNum + 1} color={nextColor} />
                         <div className="w-px flex-1 min-h-[8px]" style={{ background: `${nextColor}30` }} />
                       </div>
-                      <div className="pb-1 flex-1 min-w-0">
-                        <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">
-                          {legs[i + 1] ? activeLeg(legs[i + 1], i + 1).departureTime : ''}
+                      <div className="pb-1 flex-1 min-w-0 flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">
+                            {legs[i + 1] ? activeLeg(legs[i + 1], i + 1).departureTime : ''}
+                          </div>
+                          <div className="text-sm font-medium mt-0.5 truncate dark:text-gray-100">{active.to}</div>
                         </div>
-                        <div className="text-sm font-medium mt-0.5 truncate dark:text-gray-100">{active.to}</div>
+                        {legs[i + 1] && (
+                          <ViewSegmentButton
+                            color={nextColor}
+                            highlighted={highlightedLeg === i + 1}
+                            onEnter={() => onHighlightLeg(i + 1)}
+                            onLeave={() => onHighlightLeg(null)}
+                          />
+                        )}
                       </div>
                     </div>
                   </>

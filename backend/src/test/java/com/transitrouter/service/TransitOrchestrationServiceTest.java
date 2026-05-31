@@ -97,11 +97,11 @@ class TransitOrchestrationServiceTest {
 
     private LegResult mockLeg(long departureEpoch, int durationSeconds) {
         LegResult leg = new LegResult();
-        leg.durationSeconds    = durationSeconds;
-        leg.departureTimeEpoch = departureEpoch;
-        leg.arrivalTimeEpoch   = departureEpoch + durationSeconds;
-        leg.polyline           = List.of(new LatLngPoint(1.3, 103.8));
-        leg.steps              = List.of();
+        leg.setDurationSeconds(durationSeconds);
+        leg.setDepartureTimeEpoch(departureEpoch);
+        leg.setArrivalTimeEpoch(departureEpoch + durationSeconds);
+        leg.setPolyline(List.of(new LatLngPoint(1.3, 103.8)));
+        leg.setSteps(List.of());
         return leg;
     }
 }

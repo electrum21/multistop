@@ -30,15 +30,12 @@ public class TransitOrchestrationService {
     }
 
     public Map<String, Object> planRoute(RouteRequest request) {
+        Instant departure = request.getDepartureTime().atZone(SGT).toInstant();
         List<StopInput> orderedStops = request.isOptimiseOrder()
-                ? optimiseStopOrder(request.getStops(),
-                    request.getDepartureTime().toInstant(SGT.getRules().getOffset(request.getDepartureTime())))
+                ? optimiseStopOrder(request.getStops(), departure)
                 : request.getStops();
 
-        return orchestrate(orderedStops,
-                request.getDepartureTime().toInstant(SGT.getRules().getOffset(request.getDepartureTime())),
-                request.getRoutingPreference(),
-                request.getTransitModes());
+        return orchestrate(orderedStops, departure, request.getRoutingPreference(), request.getTransitModes());
     }
 
     private Map<String, Object> orchestrate(List<StopInput> stops, Instant cursor,
@@ -76,8 +73,8 @@ public class TransitOrchestrationService {
             }
 
             if (i < stops.size() - 2) {
-                Instant nextDeparture = arrival.plusSeconds((long) to.getStayMinutes() * 60); // from → to
-                stopMeta.add(buildStopMeta(to, arrival, nextDeparture, to.getStayMinutes())); // from → to
+                Instant nextDeparture = arrival.plusSeconds((long) to.getStayMinutes() * 60);
+                stopMeta.add(buildStopMeta(to, arrival, nextDeparture, to.getStayMinutes()));
                 log.info("  Arrived {}. Staying {} min. Next departure: {}",
                         TIME_FMT.format(arrival), to.getStayMinutes(), TIME_FMT.format(nextDeparture));
                 cursor = nextDeparture;

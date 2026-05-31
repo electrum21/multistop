@@ -275,9 +275,11 @@ export function TransitMap({ result, highlightedLeg, theme }: Props) {
 
       const stayInfo = stop.stay > 0
         ? `<br><span style="color:#888">Stay: ${stop.stay} min (${stop.arrivalTime} – ${stop.departureTime})</span>`
-        : stop.arrivalTime
-          ? `<br><span style="color:#888">Arrive: ${stop.arrivalTime}</span>`
-          : ''
+        : i === 0 && stop.departureTime
+          ? `<br><span style="color:#888">Depart: ${stop.departureTime}</span>`
+          : stop.arrivalTime
+            ? `<br><span style="color:#888">Arrive: ${stop.arrivalTime}</span>`
+            : ''
 
       const marker = L.marker([stop.lat, stop.lng], { icon })
         .bindPopup(`<div style="font-size:13px;line-height:1.5"><b>${stop.name}</b>${stayInfo}</div>`)
