@@ -1,4 +1,4 @@
-const LEG_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
+const LEG_COLORS = ['#3B82F6', '#3B82F6', '#3B82F6', '#3B82F6', '#3B82F6', '#3B82F6']
 
 // Singapore LRT lines reported as TRAM by Google — treat them as SUBWAY
 const LRT_LINES = new Set(['PG', 'SK', 'BP', 'STC', 'CGL'])
@@ -148,7 +148,6 @@ function OptionPicker({
   const alts = leg.alternatives
   if (!alts || alts.length <= 1) return null
 
-  // Deduplicate by lines + departure time
   const seen = new Set<string>()
   const unique = alts.reduce<{ alt: LegData; originalIndex: number }[]>((acc, alt, i) => {
     const transitSteps = alt.steps?.filter(s => s.mode !== 'WALK' && s.line) ?? []
@@ -165,7 +164,7 @@ function OptionPicker({
 
   return (
     <div className="flex gap-1 mt-2 flex-wrap">
-      {top3.map(({ alt, originalIndex }, i) => {
+      {top3.map(({ alt, originalIndex }) => {
         const isSelected = originalIndex === selectedIndex
         const transitSteps = alt.steps?.filter(s => s.mode !== 'WALK' && s.line) ?? []
         const lines = transitSteps.length > 0
@@ -187,6 +186,17 @@ function OptionPicker({
           </button>
         )
       })}
+    </div>
+  )
+}
+
+function StopCircle({ number, color, isLast }: { number: number; color: string; isLast?: boolean }) {
+  return (
+    <div
+      className="w-7 h-7 rounded-full flex items-center justify-center font-bold flex-shrink-0 z-10 text-white"
+      style={{ background: color, fontSize: '13px' }}
+    >
+      {number}
     </div>
   )
 }
@@ -228,38 +238,54 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
       </div>
 
       {/* Timeline scroll area */}
-      <div className="flex-1 overflow-y-auto px-5 py-4">
+      <div className="flex-1 overflow-y-auto px-5 pt-4 pb-32">
         <div className="relative">
           {legs.map((leg, i) => {
             const color = LEG_COLORS[i % LEG_COLORS.length]
+            const nextColor = LEG_COLORS[(i + 1) % LEG_COLORS.length]
             const active = activeLeg(leg, i)
             const midStop = stops[i + 1]
             const hasStay = midStop && midStop.stay > 0 && i < legs.length - 1
             const selIdx = selectedOptions[i] ?? 0
+            const stopNum = i + 1  // departure stop number for this leg
+
+            const prevHasStay = i > 0 && stops[i] && stops[i].stay > 0
 
             return (
               <div key={i}>
-                <div className="flex gap-3 relative">
+
+                {/* ── Departure stop: [N] time / name — skip if already shown as stay-block departure ── */}
+                {!prevHasStay && (
+                <div className="flex gap-3">
                   <div className="flex flex-col items-center flex-shrink-0">
-                    <div
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-sm flex-shrink-0 z-10 relative"
-                      style={{ background: `${color}18`, border: `1.5px solid ${color}55` }}
-                    >
-                      {modeIcon(normaliseMode(active.mode, active.line))}
-                      <span
-                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-white font-bold"
-                        style={{ background: color, fontSize: '9px', lineHeight: 1 }}
-                      >
-                        {i + 1}
-                      </span>
-                    </div>
+                    <StopCircle number={stopNum} color={color} />
+                    <div className="w-px flex-1 min-h-[8px]" style={{ background: `${color}30` }} />
+                  </div>
+                  <div className="pb-1 flex-1 min-w-0">
+                    <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">{active.departureTime}</div>
+                    <div className="text-sm font-medium mt-0.5 truncate dark:text-gray-100">{active.from}</div>
+                  </div>
+                </div>
+                )}
+
+                {/* ── Leg content (indented, no circle) ── */}
+                <div className="flex gap-3">
+                  <div className="flex flex-col items-center flex-shrink-0">
+                    <div className="w-7 flex-shrink-0" />
                     <div className="w-px flex-1 min-h-[24px]" style={{ background: `${color}30` }} />
                   </div>
                   <div className="pb-1 flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">{active.departureTime}</div>
-                        <div className="text-sm font-medium mt-0.5 truncate dark:text-gray-100">{active.from}</div>
+                      <div className="flex items-center gap-2 mt-0.5 flex-1 min-w-0">
+                        <span className="text-xs text-gray-400 dark:text-gray-500 truncate">
+                          {modeLabel(normaliseMode(active.mode, active.line))}{active.line ? ` · ${active.line}` : ''} → {active.to}
+                        </span>
+                        <span
+                          className="text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0"
+                          style={{ background: `${color}15`, color }}
+                        >
+                          {formatMinutes(active.durationMinutes)}
+                        </span>
                       </div>
                       <button
                         onMouseEnter={() => onHighlightLeg(i)}
@@ -278,17 +304,6 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
                         <span>View Segment</span>
                       </button>
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-gray-400 dark:text-gray-500 truncate">
-                        {modeLabel(normaliseMode(active.mode, active.line))}{active.line ? ` · ${active.line}` : ''} → {active.to}
-                      </span>
-                      <span
-                        className="text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0"
-                        style={{ background: `${color}15`, color }}
-                      >
-                        {formatMinutes(active.durationMinutes)}
-                      </span>
-                    </div>
 
                     <OptionPicker
                       leg={leg}
@@ -301,41 +316,72 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
                       <LegSteps steps={active.steps} />
                     )}
 
-                    <div className="flex items-center gap-1.5 mt-1.5 mb-3">
+                    <div className="flex items-center gap-1.5 mt-1.5 mb-2">
                       <div className="h-px flex-1" style={{ background: `${color}20` }} />
                       <span className="text-xs text-gray-400 dark:text-gray-500">{active.arrivalTime}</span>
                     </div>
                   </div>
                 </div>
 
+                {/* ── Arrival at mid-stop: [N+1] arrivalTime / name ── */}
                 {hasStay && (
-                  <div className="flex gap-3 relative">
-                    <div className="flex flex-col items-center flex-shrink-0">
-                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm flex-shrink-0 z-10 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                        📍
+                  <>
+                    {/* Arrival row */}
+                    <div className="flex gap-3">
+                      <div className="flex flex-col items-center flex-shrink-0">
+                        <StopCircle number={stopNum + 1} color={nextColor} />
+                        <div className="w-px flex-1 min-h-[8px] bg-gray-200 dark:bg-gray-700" />
                       </div>
-                      <div className="w-px flex-1 min-h-[24px] bg-gray-100 dark:bg-gray-700" />
+                      <div className="pb-1 flex-1 min-w-0">
+                        <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">{active.arrivalTime}</div>
+                        <div className="text-sm font-medium mt-0.5 truncate dark:text-gray-100">{active.to}</div>
+                      </div>
                     </div>
-                    <div className="pb-3 flex-1 min-w-0">
-                      <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">{active.arrivalTime}</div>
-                      <div className="text-sm font-medium mt-0.5 truncate dark:text-gray-100">{active.to}</div>
-                      <div className="mt-1.5 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg px-3 py-2">
-                        <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">⏱ Staying {midStop.stay} min</div>
-                        <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                          {active.arrivalTime} → {legs[i + 1] ? activeLeg(legs[i + 1], i + 1).departureTime : ''}
+
+                    {/* Stay block */}
+                    <div className="flex gap-3">
+                      <div className="flex flex-col items-center flex-shrink-0">
+                        <div className="w-7 flex-shrink-0" />
+                        <div className="w-px flex-1 min-h-[24px] bg-gray-200 dark:bg-gray-700" />
+                      </div>
+                      <div className="flex-1 min-w-0 mb-2">
+                        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg px-3 py-2">
+                          <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">⏱ Staying {midStop.stay} min</div>
+                          <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                            {active.arrivalTime} → {legs[i + 1] ? activeLeg(legs[i + 1], i + 1).departureTime : ''}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+
+                    {/* Departure row — same stop, same number, but departure time */}
+                    <div className="flex gap-3">
+                      <div className="flex flex-col items-center flex-shrink-0">
+                        <StopCircle number={stopNum + 1} color={nextColor} />
+                        <div className="w-px flex-1 min-h-[8px]" style={{ background: `${nextColor}30` }} />
+                      </div>
+                      <div className="pb-1 flex-1 min-w-0">
+                        <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">
+                          {legs[i + 1] ? activeLeg(legs[i + 1], i + 1).departureTime : ''}
+                        </div>
+                        <div className="text-sm font-medium mt-0.5 truncate dark:text-gray-100">{active.to}</div>
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             )
           })}
 
-          {/* Final arrival */}
-          <div className="flex gap-3">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400">
-              {stops.length}
+          {/* ── Final destination ── */}
+          <div className="flex gap-3 mt-1">
+            <div className="flex flex-col items-center flex-shrink-0">
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center font-bold flex-shrink-0 z-10 text-white"
+                style={{ background: '#3B82F6', fontSize: '13px' }}
+              >
+                {stops.length}
+              </div>
             </div>
             <div className="pb-2 flex-1 min-w-0">
               <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">{arrivalTime}</div>
