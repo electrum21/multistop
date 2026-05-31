@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { PlaceAutocomplete, ResolvedPlace } from './PlaceAutocomplete'
-import { LEG_COLORS } from '../constants.ts'
+import { LEG_COLORS } from '../constants'
 
 export interface Stop {
   id: number
@@ -32,10 +32,8 @@ export function StopList({ stops, onChange }: Props) {
 
   function addStop() {
     if (stops.length >= MAX_STOPS) return
-    const newStop: Stop = { id: Date.now(), name: '', place: null, stayMinutes: 30 }
-    const next = [...stops]
-    next.splice(next.length - 1, 0, newStop)
-    onChange(next)
+    const newStop: Stop = { id: Date.now(), name: '', place: null, stayMinutes: 0 }
+    onChange([...stops, newStop])
   }
 
   function focusNext(idx: number) {

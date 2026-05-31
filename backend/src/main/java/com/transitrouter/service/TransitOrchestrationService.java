@@ -151,6 +151,8 @@ public class TransitOrchestrationService {
             sm.put("mode", stepMode);
             sm.put("line", s.getLine() != null ? s.getLine() : "");
             sm.put("durationSeconds", s.getDurationSeconds());
+            if (s.getDepartureStop() != null) sm.put("departureStop", s.getDepartureStop());
+            if (s.getArrivalStop() != null) sm.put("arrivalStop", s.getArrivalStop());
             if (s.getPolyline() != null) {
                 List<Map<String, Object>> stepPts = new ArrayList<>();
                 for (LatLngPoint p : s.getPolyline()) {

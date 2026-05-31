@@ -1,7 +1,7 @@
-import { LEG_COLORS } from '../constants.ts'
+import { LEG_COLORS } from '../constants'
 
 // Singapore LRT lines reported as TRAM by Google — treat them as SUBWAY
-const LRT_LINES = new Set(['PG', 'SK', 'BP'])
+const LRT_LINES = new Set(['PG', 'SK', 'BP', 'STC', 'CGL'])
 function normaliseMode(mode: string, line?: string): string {
   if (mode?.toUpperCase() === 'TRAM' && line && LRT_LINES.has(line.toUpperCase())) return 'SUBWAY'
   return mode
@@ -12,6 +12,8 @@ interface StepDetail {
   mode: string
   line: string
   durationSeconds: number
+  departureStop?: string
+  arrivalStop?: string
   polyline?: { lat: number; lng: number }[]
 }
 
@@ -106,24 +108,33 @@ function LegSteps({ steps }: { steps: StepDetail[] }) {
     <div className="mt-2 mb-1 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-700">
       {steps.map((step, i) => {
         const effectiveMode = normaliseMode(step.mode, step.line)
-        const colors = stepModeColor(effectiveMode)
         return (
           <div
             key={i}
             className="flex items-start gap-2.5 px-3 py-2 text-xs border-b border-gray-50 dark:border-gray-700 last:border-b-0 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
           >
-            <div
-              className="flex-shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium"
-              style={{ background: colors.bg, color: colors.text, border: `1px solid ${colors.border}` }}
-            >
+            <div className="flex-shrink-0 w-5 text-center leading-snug mt-0.5">
               <span>{modeIcon(effectiveMode)}</span>
-              <span>{modeLabel(effectiveMode)}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-gray-700 dark:text-gray-300 leading-snug">{step.instruction}</div>
+              <div className="text-gray-700 dark:text-gray-200 leading-snug">{step.instruction}</div>
               {step.line && (
                 <div className="text-gray-400 dark:text-gray-500 mt-0.5 truncate">
                   Line: <span className="font-medium text-gray-600 dark:text-gray-400">{step.line}</span>
+                </div>
+              )}
+              {step.departureStop && step.arrivalStop && (
+                <div className="text-gray-400 dark:text-gray-400 mt-0.5 space-y-0.5">
+                  {(() => {
+                    const isSubway = effectiveMode?.toUpperCase() === 'SUBWAY'
+                    const suffix = isSubway ? ' Stn' : ''
+                    return (
+                      <>
+                        <div>Board: <span className="font-medium text-gray-700 dark:text-gray-200">{step.departureStop}{suffix}</span></div>
+                        <div>Alight: <span className="font-medium text-gray-700 dark:text-gray-200">{step.arrivalStop}{suffix}</span></div>
+                      </>
+                    )
+                  })()}
                 </div>
               )}
             </div>
@@ -312,7 +323,13 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
                     <div className="flex items-start gap-2">
                       <div className="flex items-center gap-2 mt-0.5 flex-1 min-w-0">
                         <span className="text-xs text-gray-400 dark:text-gray-500 truncate">
-                          {modeLabel(normaliseMode(active.mode, active.line))}{active.line ? ` · ${active.line}` : ''} → {active.to}
+                          {(() => {
+                            const transitSteps = active.steps?.filter(s => s.mode !== 'WALK' && s.line) ?? []
+                            const lineLabel = transitSteps.length > 0
+                              ? transitSteps.map(s => s.line).join(' + ')
+                              : active.line
+                            return `${modeLabel(normaliseMode(active.mode, active.line))} · ${lineLabel} → ${active.to}`
+                          })()}
                         </span>
                         <span
                           className="text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0"

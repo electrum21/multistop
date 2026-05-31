@@ -6,8 +6,6 @@ import { useGoogleMaps } from './hooks/useGoogleMaps'
 
 const GOOGLE_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? ''
 
-const DEFAULT_WAYPOINT_STAY_MINUTES = 45
-
 let stopCounter = 10
 function makeStop(stayMinutes = 0): Stop {
   return { id: stopCounter++, name: '', place: null, stayMinutes }
@@ -29,7 +27,6 @@ export default function App() {
 
   const [stops, setStops] = useState<Stop[]>([
     makeStop(0),
-    makeStop(DEFAULT_WAYPOINT_STAY_MINUTES),
     makeStop(0),
   ])
   const [departureTime, setDepartureTime] = useState(() => {
