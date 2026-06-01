@@ -105,7 +105,7 @@ export function StopList({ stops, onChange }: Props) {
                 />
               </div>
 
-              {!isFirst ? (
+              {!isFirst && stops.length > 2 ? (
                 <button
                   onClick={() => remove(stop.id)}
                   className="text-gray-300 dark:text-gray-600 hover:text-red-400 dark:hover:text-red-500 transition-colors text-lg leading-none px-1"

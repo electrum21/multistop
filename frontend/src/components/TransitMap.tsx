@@ -51,7 +51,7 @@ interface RouteResult {
   stops: StopData[]
 }
 
-interface Props { result: RouteResult | null; highlightedLeg?: number | null; theme?: 'light' | 'dark' }
+interface Props { result: RouteResult | null; highlightedLeg?: number | null; highlightedStep?: { leg: number; stepIndex: number } | null; theme?: 'light' | 'dark' }
 
 // Singapore LRT lines reported as TRAM by Google — treat them as SUBWAY
 const LRT_LINES = new Set(['PG', 'SK', 'BP'])
@@ -100,13 +100,15 @@ function modeLabel(mode: string, line?: string) {
   }
 }
 
-export function TransitMap({ result, highlightedLeg, theme }: Props) {
+export function TransitMap({ result, highlightedLeg, highlightedStep, theme }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
   const layersRef = useRef<L.Layer[]>([])
   const tileLayerRef = useRef<L.TileLayer | null>(null)
   // Track polylines by leg index for highlight toggling
   const legPolylinesRef = useRef<Map<number, L.Polyline[]>>(new Map())
+  // Track polylines by [leg][step] for step-level highlight
+  const stepPolylinesRef = useRef<Map<string, L.Polyline>>(new Map())
   // Only auto-fit bounds when the route itself changes, not on re-renders
   const lastFitKeyRef = useRef<string | null>(null)
 
@@ -186,6 +188,7 @@ export function TransitMap({ result, highlightedLeg, theme }: Props) {
     layersRef.current.forEach(l => map.removeLayer(l))
     layersRef.current = []
     legPolylinesRef.current.clear()
+    stepPolylinesRef.current.clear()
 
     if (!result) return
 
@@ -197,7 +200,7 @@ export function TransitMap({ result, highlightedLeg, theme }: Props) {
 
       if (hasStepPolylines) {
         // Draw per-step polylines
-        leg.steps.forEach((step) => {
+        leg.steps.forEach((step, stepIdx) => {
           if (!step.polyline || step.polyline.length === 0) return
           const pts: L.LatLngTuple[] = step.polyline.map(p => [p.lat, p.lng])
           allLatLngs.push(...pts)
@@ -229,6 +232,7 @@ export function TransitMap({ result, highlightedLeg, theme }: Props) {
           ;(polyline.options as any)._baseOpacity = isWalk ? 0.7 : 0.9
           layersRef.current.push(polyline)
           legPolylines.push(polyline)
+          stepPolylinesRef.current.set(`${legIdx}:${stepIdx}`, polyline)
         })
       } else {
         // Fallback: draw leg-level polyline
@@ -340,6 +344,33 @@ export function TransitMap({ result, highlightedLeg, theme }: Props) {
       })
     })
   }, [highlightedLeg, result])
+
+  // Apply / remove step-level glow when highlightedStep changes
+  useEffect(() => {
+    if (!result) return
+    stepPolylinesRef.current.forEach((pl, key) => {
+      const [legStr, stepStr] = key.split(':')
+      const isTarget = highlightedStep !== null
+        && parseInt(legStr) === highlightedStep.leg
+        && parseInt(stepStr) === highlightedStep.stepIndex
+      const el = (pl as any)._path as SVGPathElement | undefined
+      if (!el) return
+      if (isTarget) {
+        pl.bringToFront()
+        el.style.filter = 'drop-shadow(0 0 6px currentColor)'
+        pl.setStyle({ weight: 9, opacity: 1 })
+      } else if (highlightedStep !== null) {
+        // Dim every other step while one is hovered
+        el.style.filter = ''
+        pl.setStyle({ weight: (pl.options as any)._baseWeight ?? pl.options.weight, opacity: 0.2 })
+      } else {
+        // Reset
+        el.style.filter = ''
+        const opts = pl.options as any
+        pl.setStyle({ weight: opts._baseWeight ?? opts.weight, opacity: opts._baseOpacity ?? opts.opacity })
+      }
+    })
+  }, [highlightedStep, result])
   const legendEntries = result
     ? Array.from(
         new Map(

@@ -45,16 +45,21 @@ interface RouteResult {
   stops: StopData[]
 }
 
+interface HighlightedStep { leg: number; stepIndex: number }
+
 interface Props {
   result: RouteResult
   selectedOptions: number[]
   onSelectOption: (legIndex: number, optionIndex: number) => void
   highlightedLeg: number | null
   onHighlightLeg: (legIndex: number | null) => void
+  highlightedStep: HighlightedStep | null
+  onHighlightStep: (step: HighlightedStep | null) => void
 }
 
-function modeIcon(mode: string): React.ReactElement {
-  switch (mode?.toUpperCase()) {
+function modeIcon(mode: string, line?: string): React.ReactElement {
+  const effective = (line && line !== 'Sentosa Express') ? normaliseMode(mode, line) : mode
+  switch (effective?.toUpperCase()) {
     case 'SUBWAY': return <i className="fa-solid fa-train-subway dark:text-white" />
     case 'BUS': return <i className="fa-solid fa-bus dark:text-white" />
     case 'WALK': return <i className="fa-solid fa-person-walking dark:text-white" />
@@ -66,7 +71,8 @@ function modeIcon(mode: string): React.ReactElement {
 
 function modeLabel(mode: string, line?: string) {
   if (mode?.toUpperCase() === 'TRAM' && line === 'Sentosa Express') return 'Monorail'
-  switch (mode?.toUpperCase()) {
+  const effective = normaliseMode(mode, line)
+  switch (effective?.toUpperCase()) {
     case 'SUBWAY': return 'Train'
     case 'BUS': return 'Bus'
     case 'WALK': return 'Walk'
@@ -107,6 +113,8 @@ function fixInstruction(instruction: string, line?: string): string {
   let text = instruction
   if (line === 'Sentosa Express') {
     text = text.replace(/\bTram\b/gi, 'Monorail')
+  } else if (line && LRT_LINES.has(line.toUpperCase())) {
+    text = text.replace(/\bTram\b/gi, 'Train')
   }
   text = text.replace(/\bSubway\b/gi, 'Train')
   return text
@@ -145,16 +153,75 @@ function MrtPill({ line }: { line: string }) {
   )
 }
 
-function LegSteps({ steps }: { steps: StepDetail[] }) {
+// Bus operator colour config
+// SBS Transit (SBST) → purple, Go-Ahead Singapore (GAS) → yellow, Tower Transit (TTS) → green, SMRT → red
+const BUS_OPERATOR_STYLES: Record<string, { bg: string; text: string }> = {
+  SBST: { bg: '#7C3AED', text: '#fff' },  // purple
+  GAS:  { bg: '#D97706', text: '#fff' },  // yellow/amber
+  TTS:  { bg: '#16A34A', text: '#fff' },  // green
+  SMRT: { bg: '#DC2626', text: '#fff' },  // red
+}
+
+// Build a Map from service number → operator using the imported JSON
+import busServicesData from '../../../bus-services.json'
+
+const BUS_SERVICE_OPERATOR: Map<string, string> = new Map()
+;(busServicesData as Array<{ ServiceNo: string; Operator: string }>).forEach(({ ServiceNo, Operator }) => {
+  if (!BUS_SERVICE_OPERATOR.has(ServiceNo)) {
+    BUS_SERVICE_OPERATOR.set(ServiceNo, Operator)
+  }
+})
+
+function BusPill({ serviceNo }: { serviceNo: string }) {
+  const operator = BUS_SERVICE_OPERATOR.get(serviceNo)
+  const style = operator ? BUS_OPERATOR_STYLES[operator] : undefined
+  if (!style) {
+    // Fallback: plain styled badge
+    return (
+      <span className="inline-block px-1.5 py-0.5 rounded text-xs font-bold leading-none bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200">
+        {serviceNo}
+      </span>
+    )
+  }
+  return (
+    <span
+      className="inline-block px-1.5 py-0.5 rounded text-xs font-bold leading-none"
+      style={{ background: style.bg, color: style.text }}
+    >
+      {serviceNo}
+    </span>
+  )
+}
+
+function LegSteps({
+  steps,
+  legIndex,
+  highlightedStep,
+  onHighlightStep,
+}: {
+  steps: StepDetail[]
+  legIndex: number
+  highlightedStep: HighlightedStep | null
+  onHighlightStep: (s: HighlightedStep | null) => void
+}) {
   if (!steps || steps.length === 0) return null
   return (
     <div className="mt-2 mb-1 rounded-lg overflow-hidden border border-gray-100 dark:border-gray-700">
       {steps.map((step, i) => {
         const effectiveMode = normaliseMode(step.mode, step.line)
+        const isHighlighted = highlightedStep?.leg === legIndex && highlightedStep?.stepIndex === i
+        const hasPolyline = step.polyline && step.polyline.length > 0
         return (
           <div
             key={i}
-            className="flex items-start gap-2.5 px-3 py-2 text-xs border-b border-gray-50 dark:border-gray-700 last:border-b-0 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
+            className="flex items-start gap-2.5 px-3 py-2 text-xs border-b border-gray-50 dark:border-gray-700 last:border-b-0 bg-white dark:bg-gray-800 transition-colors"
+            style={
+              isHighlighted
+                ? { background: 'rgba(37,99,235,0.08)', outline: '1.5px solid rgba(37,99,235,0.25)' }
+                : undefined
+            }
+            onMouseEnter={() => hasPolyline && onHighlightStep({ leg: legIndex, stepIndex: i })}
+            onMouseLeave={() => hasPolyline && onHighlightStep(null)}
           >
             <div className="flex-shrink-0 w-5 text-center leading-snug mt-0.5">
               <span>{modeIcon(effectiveMode)}</span>
@@ -165,7 +232,9 @@ function LegSteps({ steps }: { steps: StepDetail[] }) {
                 <div className="flex items-center gap-1.5 mt-0.5">
                   {(effectiveMode?.toUpperCase() === 'SUBWAY' || step.line === 'Sentosa Express')
                     ? <MrtPill line={step.line} />
-                    : <span className="text-gray-400 dark:text-gray-500">Line: <span className="font-medium text-gray-600 dark:text-gray-400">{step.line}</span></span>
+                    : effectiveMode?.toUpperCase() === 'BUS'
+                      ? <BusPill serviceNo={step.line} />
+                      : <span className="text-gray-400 dark:text-gray-500">Line: <span className="font-medium text-gray-600 dark:text-gray-400">{step.line}</span></span>
                   }
                 </div>
               )}
@@ -281,7 +350,7 @@ function ViewSegmentButton({ color, highlighted, onEnter, onLeave }: {
   )
 }
 
-export function Timeline({ result, selectedOptions, onSelectOption, highlightedLeg, onHighlightLeg }: Props) {
+export function Timeline({ result, selectedOptions, onSelectOption, highlightedLeg, onHighlightLeg, highlightedStep, onHighlightStep }: Props) {
   const { legs, stops, totalDurationMinutes, arrivalTime } = result
 
   const activeLeg = (leg: LegData, i: number): LegData => {
@@ -391,7 +460,12 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
                     />
 
                     {active.steps && active.steps.length > 0 && (
-                      <LegSteps steps={active.steps} />
+                      <LegSteps
+                        steps={active.steps}
+                        legIndex={i}
+                        highlightedStep={highlightedStep}
+                        onHighlightStep={onHighlightStep}
+                      />
                     )}
 
                     <div className="flex items-center gap-1.5 mt-1.5 mb-2">

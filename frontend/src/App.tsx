@@ -41,6 +41,8 @@ export default function App() {
   const [selectedOptions, setSelectedOptions] = useState<number[]>([])
   // highlightedLeg = index of the leg currently highlighted on the map (null = none)
   const [highlightedLeg, setHighlightedLeg] = useState<number | null>(null)
+  // highlightedStep = step within a leg being hovered in the timeline
+  const [highlightedStep, setHighlightedStep] = useState<{ leg: number; stepIndex: number } | null>(null)
   const [routingPreference, setRoutingPreference] = useState<string>('')
   const [transitModes, setTransitModes] = useState<string[]>([])
 
@@ -150,11 +152,6 @@ export default function App() {
               ].join(' ')}
             >
               {t}
-              {t === 'timeline' && result && (
-                <span className="ml-1.5 bg-blue-100 text-blue-700 rounded-full px-1.5 py-0.5 text-xs">
-                  {result.legs.length}
-                </span>
-              )}
             </button>
           ))}
         </div>
@@ -173,42 +170,43 @@ export default function App() {
                 className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-gray-100 outline-none focus:border-gray-400 focus:bg-white dark:focus:bg-gray-700 transition-colors"
               />
             </div>
-            <div>
-              <label className="font-identity block text-sm font-medium uppercase tracking-wide text-gray-400 mb-2">
-                Route Preference
-              </label>
-              <select
-                value={routingPreference}
-                onChange={e => setRoutingPreference(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-gray-100 outline-none"
-              >
-                <option value="">Best route</option>
-                <option value="FEWER_TRANSFERS">Fewer transfers</option>
-                <option value="LESS_WALKING">Less walking</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="font-identity block text-sm font-medium uppercase tracking-wide text-gray-400 mb-2">
-                Transport modes
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {['BUS', 'TRAIN', 'TRAM', 'RAIL'].map(mode => (
-                  <button
-                    key={mode}
-                    onClick={() => setTransitModes(prev =>
-                      prev.includes(mode) ? prev.filter(m => m !== mode) : [...prev, mode]
-                    )}
-                    className={[
-                      'px-3 py-1 text-xs rounded-lg border transition-colors',
-                      transitModes.includes(mode)
-                        ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-900 dark:border-gray-100'
-                        : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700',
-                    ].join(' ')}
-                  >
-                    {mode.charAt(0) + mode.slice(1).toLowerCase()}
-                  </button>
-                ))}
+            <div className="flex items-end gap-3">
+              <div className="flex-1 min-w-0">
+                <label className="font-identity block text-sm font-medium uppercase tracking-wide text-gray-400 mb-2">
+                  Route Preference
+                </label>
+                <select
+                  value={routingPreference}
+                  onChange={e => setRoutingPreference(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-gray-100 outline-none"
+                >
+                  <option value="">Best route</option>
+                  <option value="FEWER_TRANSFERS">Fewer transfers</option>
+                  <option value="LESS_WALKING">Less walking</option>
+                </select>
+              </div>
+              <div className="flex-1 min-w-0">
+                <label className="font-identity block text-sm font-medium uppercase tracking-wide text-gray-400 mb-2">
+                  Modes
+                </label>
+                <div className="flex gap-2">
+                  {['BUS', 'TRAIN'].map(mode => (
+                    <button
+                      key={mode}
+                      onClick={() => setTransitModes(prev =>
+                        prev.includes(mode) ? prev.filter(m => m !== mode) : [...prev, mode]
+                      )}
+                      className={[
+                        'flex-1 py-2 text-xs rounded-lg border transition-colors',
+                        transitModes.includes(mode)
+                          ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-900 dark:border-gray-100'
+                          : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700',
+                      ].join(' ')}
+                    >
+                      {mode.charAt(0) + mode.slice(1).toLowerCase()}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
             <div>
@@ -243,6 +241,8 @@ export default function App() {
                 onSelectOption={selectOption}
                 highlightedLeg={highlightedLeg}
                 onHighlightLeg={setHighlightedLeg}
+                highlightedStep={highlightedStep}
+                onHighlightStep={setHighlightedStep}
               />
             : (
               <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-600 text-sm">
@@ -254,7 +254,7 @@ export default function App() {
 
       {/* ── Right: Map ── */}
       <div className="flex-1 relative">
-        <TransitMap result={activeResult} highlightedLeg={highlightedLeg} theme={theme} />
+        <TransitMap result={activeResult} highlightedLeg={highlightedLeg} highlightedStep={highlightedStep} theme={theme} />
         {!result && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400 pointer-events-none">
             <i className="fa-regular fa-map text-5xl text-gray-300 dark:text-gray-600" />

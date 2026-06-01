@@ -40,6 +40,11 @@ public class TransitOrchestrationService {
 
     private Map<String, Object> orchestrate(List<StopInput> stops, Instant cursor,
             String routingPreference, List<String> transitModes) {
+        // Defensive: strip TRAM and RAIL — not relevant in Singapore
+        final List<String> filteredModes = transitModes == null ? null :
+                transitModes.stream()
+                        .filter(m -> m != null && !m.equalsIgnoreCase("TRAM") && !m.equalsIgnoreCase("RAIL"))
+                        .collect(java.util.stream.Collectors.toList());
         List<LegResult> legResults = new ArrayList<>();
         List<List<LegResult>> legAlternatives = new ArrayList<>();
         List<Map<String, Object>> stopMeta = new ArrayList<>();
@@ -58,7 +63,7 @@ public class TransitOrchestrationService {
                     resolveLocation(to),
                     cursor.getEpochSecond(),
                     routingPreference,
-                    transitModes
+                    filteredModes
             );
             legAlternatives.add(alternatives);
 

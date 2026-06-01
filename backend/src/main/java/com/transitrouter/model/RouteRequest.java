@@ -58,7 +58,14 @@ public class RouteRequest {
     }
 
     public void setTransitModes(List<String> transitModes) {
-        this.transitModes = transitModes;
+        // TRAM and RAIL are not relevant in Singapore — strip them out
+        if (transitModes != null) {
+            this.transitModes = transitModes.stream()
+                    .filter(m -> m != null && !m.equalsIgnoreCase("TRAM") && !m.equalsIgnoreCase("RAIL"))
+                    .collect(java.util.stream.Collectors.toList());
+        } else {
+            this.transitModes = null;
+        }
     }
 
     public static class StopInput {

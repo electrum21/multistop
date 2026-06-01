@@ -243,7 +243,7 @@ export function PlaceAutocomplete({
             aria-label="Clear location"
             tabIndex={-1}
           >
-            <i className="fa-solid fa-check dark:text-white" />
+            <i className="fa-solid fa-xmark dark:text-white" />
           </button>
         ) : loading ? (
           <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"><i className="fa-solid fa-spinner fa-spin dark:text-white" /></span>
