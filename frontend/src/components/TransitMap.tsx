@@ -400,9 +400,9 @@ export function TransitMap({ result, highlightedLeg, highlightedStep, theme }: P
 
       {/* Legend */}
       {result && legendEntries.length > 0 && (
-        <div className="absolute top-3 right-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-xl p-3 z-50 min-w-[130px] shadow-sm">
+        <div className="absolute bottom-3 left-3 md:bottom-auto md:top-3 md:left-auto md:right-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-xl p-2.5 z-10 shadow-sm flex md:flex-col flex-row gap-x-3 flex-wrap">
           {legendEntries.map(({ mode, color, isWalk, label, icon }) => (
-            <div key={mode} className="flex items-center gap-2 text-xs mb-1.5 last:mb-0">
+            <div key={mode} className="flex items-center gap-2 text-xs">
               <svg width="20" height="8" viewBox="0 0 20 8" className="flex-shrink-0">
                 {isWalk ? (
                   /* Dots to match the map */

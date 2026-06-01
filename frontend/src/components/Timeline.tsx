@@ -222,6 +222,7 @@ function LegSteps({
             }
             onMouseEnter={() => hasPolyline && onHighlightStep({ leg: legIndex, stepIndex: i })}
             onMouseLeave={() => hasPolyline && onHighlightStep(null)}
+            onClick={() => hasPolyline && (isHighlighted ? onHighlightStep(null) : onHighlightStep({ leg: legIndex, stepIndex: i }))}
           >
             <div className="flex-shrink-0 w-5 text-center leading-snug mt-0.5">
               <span>{modeIcon(effectiveMode)}</span>
@@ -337,6 +338,7 @@ function ViewSegmentButton({ color, highlighted, onEnter, onLeave }: {
     <button
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
+      onClick={() => highlighted ? onLeave() : onEnter()}
       className="flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all border mt-0.5"
       style={
         highlighted

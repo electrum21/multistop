@@ -7,9 +7,11 @@ html, body, #root {
   margin: 0;
 }
 
-/* Fix Leaflet z-index inside flex containers */
-.leaflet-pane { z-index: 40 !important; }
-.leaflet-control { z-index: 50 !important; }
+/* Leaflet z-indices kept low so app UI (sheet, topbar) renders on top */
+.leaflet-pane        { z-index: 4 !important; }
+.leaflet-control     { z-index: 5 !important; }
+.leaflet-top,
+.leaflet-bottom      { z-index: 5 !important; }
 
 /* Font Awesome glyphs in Leaflet popup HTML strings */
 .leaflet-popup-content .fa-icon {
@@ -33,3 +35,13 @@ html, body, #root {
 /* Scrollbar — dark mode */
 .dark ::-webkit-scrollbar-thumb { background: #374151; }
 .dark ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+/* Mobile safe area support */
+@supports (padding: max(0px)) {
+  .mobile-safe-top {
+    padding-top: max(2.5rem, env(safe-area-inset-top));
+  }
+  .mobile-safe-bottom {
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+}
