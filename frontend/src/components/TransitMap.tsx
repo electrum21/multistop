@@ -64,18 +64,32 @@ function modeColor(mode: string): string {
   return MODE_COLORS[mode?.toUpperCase()] ?? DEFAULT_COLOR
 }
 
-function modeIcon(mode: string) {
+// FA unicode chars for use inside Leaflet HTML popup strings
+function modeIcon(mode: string): string {
   switch (mode?.toUpperCase()) {
-    case 'SUBWAY': return '🚇'
-    case 'BUS': return '🚌'
-    case 'WALK': return '🚶'
-    case 'TRAM': return '🚊'
-    case 'FERRY': return '⛴️'
-    default: return '🚌'
+    case 'SUBWAY': return '\u{f239}'  // fa-train-subway
+    case 'BUS':    return '\u{f207}'  // fa-bus
+    case 'WALK':   return '\u{f554}'  // fa-person-walking
+    case 'TRAM':   return '\u{e68b}'  // fa-train-tram
+    case 'FERRY':  return '\u{e4ea}'  // fa-ferry
+    default:       return '\u{f207}'  // fa-bus
   }
 }
 
-function modeLabel(mode: string) {
+// FA icon element for React rendering
+function ModeIconEl({ mode }: { mode: string }) {
+  switch (mode?.toUpperCase()) {
+    case 'SUBWAY': return <i className="fa-solid fa-train-subway" />
+    case 'BUS':    return <i className="fa-solid fa-bus" />
+    case 'WALK':   return <i className="fa-solid fa-person-walking" />
+    case 'TRAM':   return <i className="fa-solid fa-train-tram" />
+    case 'FERRY':  return <i className="fa-solid fa-ferry" />
+    default:       return <i className="fa-solid fa-bus" />
+  }
+}
+
+function modeLabel(mode: string, line?: string) {
+  if (mode?.toUpperCase() === 'TRAM' && line === 'Sentosa Express') return 'Monorail'
   switch (mode?.toUpperCase()) {
     case 'SUBWAY': return 'Train'
     case 'BUS': return 'Bus'
@@ -256,7 +270,7 @@ export function TransitMap({ result, highlightedLeg, theme }: Props) {
       if (!stop.lat || !stop.lng) return
       const color = '#EF4444'
       const pinSize = 32
-      const borderColor = theme === 'dark' ? '#ffffff' : '#111111'
+      const borderColor = '#ffffff'
       const label = String(i + 1)
       const fontSize = label.length > 1 ? 9 : 11
 
@@ -334,11 +348,13 @@ export function TransitMap({ result, highlightedLeg, theme }: Props) {
               const m = normaliseMode(s.mode, s.line)?.toUpperCase()
               const isWalk = m === 'WALK'
               const walkColor = theme === 'dark' ? '#ffffff' : '#111111'
-              return [m, {
+              const label = modeLabel(m, s.line)
+              const key = m + (s.line === 'Sentosa Express' ? '_monorail' : '')
+              return [key, {
                 mode: m,
                 color: isWalk ? walkColor : modeColor(m),
                 isWalk,
-                label: modeLabel(m),
+                label,
                 icon: modeIcon(m),
               }]
             })
@@ -369,7 +385,7 @@ export function TransitMap({ result, highlightedLeg, theme }: Props) {
                   <line x1="0" y1="4" x2="20" y2="4" stroke={color} strokeWidth="3" strokeLinecap="round" />
                 )}
               </svg>
-              <span className="text-gray-600 dark:text-gray-300">{icon} {label}</span>
+              <span className="text-gray-600 dark:text-gray-300"><ModeIconEl mode={mode} /> {label}</span>
             </div>
           ))}
         </div>

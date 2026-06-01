@@ -11,6 +11,12 @@ html, body, #root {
 .leaflet-pane { z-index: 40 !important; }
 .leaflet-control { z-index: 50 !important; }
 
+/* Font Awesome glyphs in Leaflet popup HTML strings */
+.leaflet-popup-content .fa-icon {
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+}
+
 @font-face {
   font-family: 'LTAIdentity';
   src: url('./assets/fonts/LTAIdentity.ttf') format('truetype');

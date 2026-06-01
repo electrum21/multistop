@@ -127,10 +127,10 @@ export default function App() {
             <h1 className="font-identity text-2xl dark:text-gray-100">MULTISTOP</h1>
             <div className="flex items-center gap-1 bg-gray-300 dark:bg-gray-800 rounded-lg p-0.5">
               <button onClick={() => setTheme('light')} className={theme === 'light' ? 'bg-white rounded-md px-2 py-1 shadow-sm' : 'px-2 py-1 opacity-40'}>
-                ☀️
+                <i className="fa-solid fa-sun text-amber-400 text-sm" />
               </button>
               <button onClick={() => setTheme('dark')} className={theme === 'dark' ? 'bg-white rounded-md px-2 py-1 shadow-sm' : 'px-2 py-1 opacity-40'}>
-                🌙
+                <i className="fa-solid fa-moon text-indigo-400 text-sm" />
               </button>
             </div>
           </div>
@@ -229,7 +229,7 @@ export default function App() {
               disabled={loading}
               className="w-full py-2.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-medium rounded-xl disabled:opacity-40 hover:bg-gray-700 dark:hover:bg-gray-300 transition-colors"
             >
-              {loading ? 'Finding route…' : 'Plan route →'}
+              {loading ? <><i className="fa-solid fa-spinner fa-spin mr-1 dark:text-white" />Finding route…</> : <><i className="fa-solid fa-route mr-1 dark:text-white" />Plan route<i className="fa-solid fa-arrow-right ml-1 dark:text-white" /></>}
             </button>
           </div>
         )}
@@ -257,10 +257,7 @@ export default function App() {
         <TransitMap result={activeResult} highlightedLeg={highlightedLeg} theme={theme} />
         {!result && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400 pointer-events-none">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true">
-              <path d="M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3V7z"/>
-              <path d="M9 4v13M15 7v13"/>
-            </svg>
+            <i className="fa-regular fa-map text-5xl text-gray-300 dark:text-gray-600" />
             <span className="text-sm">Your route will appear here</span>
           </div>
         )}

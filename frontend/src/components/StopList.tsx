@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
 import { PlaceAutocomplete, ResolvedPlace } from './PlaceAutocomplete'
-import { LEG_COLORS } from '../constants'
 
 export interface Stop {
   id: number
@@ -73,7 +72,7 @@ export function StopList({ stops, onChange }: Props) {
       {stops.map((stop, idx) => {
         const isFirst = idx === 0
         const isLast = idx === stops.length - 1
-        const color = LEG_COLORS[idx % LEG_COLORS.length]
+        const color = '#2563EB'
 
         return (
           <div
@@ -88,7 +87,7 @@ export function StopList({ stops, onChange }: Props) {
             <div className="flex items-center gap-2 py-1">
               {/* Drag handle */}
               <div className="cursor-grab text-gray-300 dark:text-gray-600 hover:text-gray-400 select-none px-0.5 text-sm leading-none">
-                ⠿
+                <i className="fa-solid fa-grip-vertical dark:text-white" />
               </div>
 
               <div
@@ -112,7 +111,7 @@ export function StopList({ stops, onChange }: Props) {
                   className="text-gray-300 dark:text-gray-600 hover:text-red-400 dark:hover:text-red-500 transition-colors text-lg leading-none px-1"
                   aria-label="Remove stop"
                 >
-                  ×
+                  <i className="fa-solid fa-xmark dark:text-white" />
                 </button>
               ) : (
                 <div className="w-6" />
@@ -148,7 +147,7 @@ export function StopList({ stops, onChange }: Props) {
           onClick={addStop}
           className="mt-2 flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-600 dark:hover:text-gray-300 transition-colors w-full"
         >
-          <span className="text-base leading-none">+</span>
+          <i className="fa-solid fa-plus dark:text-white" />
           Add waypoint
         </button>
       )}

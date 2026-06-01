@@ -1,4 +1,4 @@
-import { LEG_COLORS } from '../constants'
+import React from 'react'
 
 // Singapore LRT lines reported as TRAM by Google — treat them as SUBWAY
 const LRT_LINES = new Set(['PG', 'SK', 'BP', 'STC', 'CGL'])
@@ -53,18 +53,19 @@ interface Props {
   onHighlightLeg: (legIndex: number | null) => void
 }
 
-function modeIcon(mode: string) {
+function modeIcon(mode: string): React.ReactElement {
   switch (mode?.toUpperCase()) {
-    case 'SUBWAY': return '🚇'
-    case 'BUS': return '🚌'
-    case 'WALK': return '🚶'
-    case 'TRAM': return '🚊'
-    case 'FERRY': return '⛴️'
-    default: return '🚌'
+    case 'SUBWAY': return <i className="fa-solid fa-train-subway dark:text-white" />
+    case 'BUS': return <i className="fa-solid fa-bus dark:text-white" />
+    case 'WALK': return <i className="fa-solid fa-person-walking dark:text-white" />
+    case 'TRAM': return <i className="fa-solid fa-train-tram dark:text-white" />
+    case 'FERRY': return <i className="fa-solid fa-ferry dark:text-white" />
+    default: return <i className="fa-solid fa-bus dark:text-white" />
   }
 }
 
-function modeLabel(mode: string) {
+function modeLabel(mode: string, line?: string) {
+  if (mode?.toUpperCase() === 'TRAM' && line === 'Sentosa Express') return 'Monorail'
   switch (mode?.toUpperCase()) {
     case 'SUBWAY': return 'Train'
     case 'BUS': return 'Bus'
@@ -102,6 +103,48 @@ function formatDuration(seconds: number) {
   return rem > 0 ? `${h}h ${rem}m` : `${h}h`
 }
 
+function fixInstruction(instruction: string, line?: string): string {
+  let text = instruction
+  if (line === 'Sentosa Express') {
+    text = text.replace(/\bTram\b/gi, 'Monorail')
+  }
+  text = text.replace(/\bSubway\b/gi, 'Train')
+  return text
+}
+
+
+// MRT line colours (official LTA palette)
+const MRT_LINES: Record<string, { bg: string; text: string; label: string }> = {
+  'Sentosa Express': { bg: '#F5A623', text: '#fff', label: 'Sentosa Express' },
+  EW:  { bg: '#009645', text: '#fff', label: 'EWL' },
+  CG:  { bg: '#009645', text: '#fff', label: 'EWL' },
+  NS:  { bg: '#D42E12', text: '#fff', label: 'NSL' },
+  NE:  { bg: '#9900AA', text: '#fff', label: 'NEL' },
+  CC:  { bg: '#FA9E0D', text: '#fff', label: 'CCL' },
+  CE:  { bg: '#FA9E0D', text: '#fff', label: 'CCL' },
+  DT:  { bg: '#005EC4', text: '#fff', label: 'DTL' },
+  TE:  { bg: '#9D5B25', text: '#fff', label: 'TEL' },
+  JS:  { bg: '#0099AA', text: '#fff', label: 'JSL' },
+  JW:  { bg: '#0099AA', text: '#fff', label: 'JSL' },
+  BP:  { bg: '#748477', text: '#fff', label: 'BPLRT' },
+  PG:  { bg: '#748477', text: '#fff', label: 'PGLRT' },
+  SK:  { bg: '#748477', text: '#fff', label: 'SKLRT' },
+}
+
+function MrtPill({ line }: { line: string }) {
+  // Check full string first (e.g. "Sentosa Express"), then extract MRT code prefix
+  const cfg = MRT_LINES[line] ?? MRT_LINES[line.trim().split(/[^A-Z]/)[0]]
+  if (!cfg) return <span className="font-medium text-gray-600 dark:text-gray-400">{line}</span>
+  return (
+    <span
+      className="inline-block px-1.5 py-0.5 rounded text-xs font-bold leading-none"
+      style={{ background: cfg.bg, color: cfg.text }}
+    >
+      {cfg.label}
+    </span>
+  )
+}
+
 function LegSteps({ steps }: { steps: StepDetail[] }) {
   if (!steps || steps.length === 0) return null
   return (
@@ -117,10 +160,13 @@ function LegSteps({ steps }: { steps: StepDetail[] }) {
               <span>{modeIcon(effectiveMode)}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-gray-700 dark:text-gray-200 leading-snug">{step.instruction}</div>
+              <div className="text-gray-700 dark:text-gray-200 leading-snug">{fixInstruction(step.instruction, step.line)}</div>
               {step.line && (
-                <div className="text-gray-400 dark:text-gray-500 mt-0.5 truncate">
-                  Line: <span className="font-medium text-gray-600 dark:text-gray-400">{step.line}</span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  {(effectiveMode?.toUpperCase() === 'SUBWAY' || step.line === 'Sentosa Express')
+                    ? <MrtPill line={step.line} />
+                    : <span className="text-gray-400 dark:text-gray-500">Line: <span className="font-medium text-gray-600 dark:text-gray-400">{step.line}</span></span>
+                  }
                 </div>
               )}
               {step.departureStop && step.arrivalStop && (
@@ -229,10 +275,7 @@ function ViewSegmentButton({ color, highlighted, onEnter, onLeave }: {
           : { background: 'transparent', color: '#9CA3AF', borderColor: '#E5E7EB' }
       }
     >
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-        <circle cx="12" cy="12" r="3"/>
-      </svg>
+      <i className="fa-regular fa-eye text-xs dark:text-white" />
       <span>View Segment</span>
     </button>
   )
@@ -278,8 +321,8 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
       <div className="flex-1 overflow-y-auto px-5 pt-4 pb-32">
         <div className="relative">
           {legs.map((leg, i) => {
-            const color = LEG_COLORS[i % LEG_COLORS.length]
-            const nextColor = LEG_COLORS[(i + 1) % LEG_COLORS.length]
+            const color = '#2563EB'
+            const nextColor = '#2563EB'
             const active = activeLeg(leg, i)
             const midStop = stops[i + 1]
             const hasStay = midStop && midStop.stay > 0 && i < legs.length - 1
@@ -328,7 +371,7 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
                             const lineLabel = transitSteps.length > 0
                               ? transitSteps.map(s => s.line).join(' + ')
                               : active.line
-                            return `${modeLabel(normaliseMode(active.mode, active.line))} · ${lineLabel} → ${active.to}`
+                            return `${modeLabel(normaliseMode(active.mode, active.line), active.line)} · ${lineLabel} → ${active.to}`
                           })()}
                         </span>
                         <span
@@ -381,7 +424,7 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
                       </div>
                       <div className="flex-1 min-w-0 mb-2">
                         <div className="bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg px-3 py-2">
-                          <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">⏱ Staying {midStop.stay} min</div>
+                          <div className="text-xs text-gray-400 dark:text-gray-500 font-medium"><i className="fa-regular fa-clock mr-1 dark:text-white" />Staying {midStop.stay} min</div>
                           <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
                             {active.arrivalTime} → {legs[i + 1] ? activeLeg(legs[i + 1], i + 1).departureTime : ''}
                           </div>

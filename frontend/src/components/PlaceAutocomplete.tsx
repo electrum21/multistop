@@ -225,7 +225,7 @@ export function PlaceAutocomplete({
           className={[
             'w-full px-3 py-2 pr-8 text-sm rounded-lg border outline-none transition-colors',
             isResolved
-              ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 focus:border-emerald-500'
+              ? 'border-blue-400 bg-blue-50 dark:bg-blue-950 text-blue-800 dark:text-blue-300 focus:border-blue-500'
               : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-gray-400 dark:focus:border-gray-500 focus:bg-white dark:focus:bg-gray-700',
             disabled ? 'opacity-40 cursor-not-allowed' : '',
           ].join(' ')}
@@ -238,15 +238,15 @@ export function PlaceAutocomplete({
 
         {isResolved ? (
           <button
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-emerald-500 hover:text-red-400 transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-500 hover:text-red-400 transition-colors"
             onClick={() => { onChange('', null); inputRef.current?.focus() }}
             aria-label="Clear location"
             tabIndex={-1}
           >
-            ✓
+            <i className="fa-solid fa-check dark:text-white" />
           </button>
         ) : loading ? (
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs animate-spin">⟳</span>
+          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs"><i className="fa-solid fa-spinner fa-spin dark:text-white" /></span>
         ) : value ? (
           <button
             className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors"
@@ -254,7 +254,7 @@ export function PlaceAutocomplete({
             aria-label="Clear"
             tabIndex={-1}
           >
-            ×
+            <i className="fa-solid fa-xmark dark:text-white" />
           </button>
         ) : null}
       </div>
@@ -270,7 +270,7 @@ export function PlaceAutocomplete({
           {!value && (
             geoLoading ? (
               <li className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-gray-400 border-b border-gray-100 dark:border-gray-700">
-                <span className="text-base animate-spin">⟳</span>
+                <i className="fa-solid fa-spinner fa-spin text-gray-400" />
                 Locating…
               </li>
             ) : geoOption ? (
@@ -296,7 +296,7 @@ export function PlaceAutocomplete({
                 onMouseDown={e => { e.preventDefault(); fetchCurrentLocation() }}
                 className="flex items-center gap-2.5 px-3 py-2.5 cursor-pointer text-sm border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
-                <span className="flex-shrink-0">📍</span>
+                <i className="fa-solid fa-location-dot text-blue-500 flex-shrink-0 mt-0.5" />
                 <span className="font-medium text-blue-600 dark:text-blue-400">Use my current location</span>
               </li>
             )
@@ -316,9 +316,10 @@ export function PlaceAutocomplete({
                 i + geoOffset === activeIdx ? 'bg-gray-50 dark:bg-gray-700' : 'hover:bg-gray-50 dark:hover:bg-gray-700',
               ].join(' ')}
             >
-              {/* <span className="mt-0.5 text-gray-400 flex-shrink-0" aria-hidden="true">
-                {p.isTransit ? '🚉' : '📍'}
-              </span> */}
+              {p.isTransit
+                ? <i className="fa-solid fa-train-subway mt-0.5 text-blue-400 flex-shrink-0 text-sm" aria-hidden="true" />
+                : <i className="fa-solid fa-location-dot mt-0.5 text-gray-400 flex-shrink-0 text-sm" aria-hidden="true" />
+              }
               <span>
                 <span className="font-medium text-gray-900 dark:text-gray-100 block leading-snug">{p.mainText}</span>
                 {p.secondaryText && (
