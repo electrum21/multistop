@@ -8,7 +8,7 @@ const MODE_COLORS: Record<string, string> = {
   TRAM:   '#EA580C',  // orange
   FERRY:  '#0284C7',  // sky
 }
-const _WALK_COLOR  = '#1F2937'  // near-black
+
 const DEFAULT_COLOR = '#7C3AED' // purple fallback
 
 interface LatLng { lat: number; lng: number }
