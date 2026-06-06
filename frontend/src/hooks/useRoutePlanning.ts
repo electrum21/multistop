@@ -55,7 +55,7 @@ export function useRoutePlanning() {
         routingPreference: _routingPreference || null, transitModes: _transitModes,
         stops: _stops.map(s => ({ name: s.name, lat: s.place?.lat ?? null, lng: s.place?.lng ?? null, stayMinutes: s.stayMinutes })),
       }
-      const resp = await fetch('/api/transit/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      const resp = await fetch(`${import.meta.env.VITE_API_BASE_URL ?? ''}/api/transit/route`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       if (!resp.ok) {
         let errMsg = `HTTP ${resp.status}`
         try { const err = await resp.json(); errMsg = err.error ?? errMsg } catch { errMsg = 'Server error. Please try again.' }
