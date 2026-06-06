@@ -5,7 +5,6 @@ frontend/.env.local
 
 # ── Backend ───────────────────────────────────────────────
 backend/target/
-backend/.mvn/
 
 # application.properties contains your Google API key
 backend/src/main/resources/application.properties
