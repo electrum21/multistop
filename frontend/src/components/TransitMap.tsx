@@ -10,46 +10,7 @@ const MODE_COLORS: Record<string, string> = {
 }
 
 const DEFAULT_COLOR = '#7C3AED' // purple fallback
-
-interface LatLng { lat: number; lng: number }
-
-interface StepDetail {
-  instruction: string
-  mode: string
-  line: string
-  durationSeconds: number
-  polyline?: LatLng[]
-}
-
-interface LegData {
-  legIndex: number
-  from: string
-  to: string
-  departureTime: string
-  arrivalTime: string
-  durationMinutes: number
-  mode: string
-  line: string
-  polyline: LatLng[]
-  steps: StepDetail[]
-}
-
-interface StopData {
-  name: string
-  lat: number
-  lng: number
-  arrivalTime: string | null
-  departureTime: string | null
-  stay: number
-}
-
-interface RouteResult {
-  departureTime: string
-  arrivalTime: string
-  totalDurationMinutes: number
-  legs: LegData[]
-  stops: StopData[]
-}
+import type { RouteResult, RouteLeg, RouteStep, RouteStop, LatLng } from '../types'
 
 interface Props { result: RouteResult | null; highlightedLeg?: number | null; highlightedStep?: { leg: number; stepIndex: number } | null; theme?: 'light' | 'dark' }
 

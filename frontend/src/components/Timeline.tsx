@@ -7,45 +7,9 @@ function normaliseMode(mode: string, line?: string): string {
   return mode
 }
 
-interface StepDetail {
-  instruction: string
-  mode: string
-  line: string
-  durationSeconds: number
-  departureStop?: string
-  arrivalStop?: string
-  polyline?: { lat: number; lng: number }[]
-}
+import type { RouteResult, RouteLeg, RouteStep, RouteStop } from '../types'
 
-interface LegData {
-  legIndex: number
-  from: string
-  to: string
-  departureTime: string
-  arrivalTime: string
-  durationMinutes: number
-  mode: string
-  line: string
-  steps: StepDetail[]
-  alternatives?: LegData[]
-}
-
-interface StopData {
-  name: string
-  arrivalTime: string | null
-  departureTime: string | null
-  stay: number
-}
-
-interface RouteResult {
-  departureTime: string
-  arrivalTime: string
-  totalDurationMinutes: number
-  legs: LegData[]
-  stops: StopData[]
-}
-
-interface HighlightedStep { leg: number; stepIndex: number }
+type HighlightedStep = { leg: number; stepIndex: number }
 
 interface Props {
   result: RouteResult
@@ -189,7 +153,7 @@ function LegSteps({
   highlightedStep,
   onHighlightStep,
 }: {
-  steps: StepDetail[]
+  steps: RouteStep[]
   legIndex: number
   highlightedStep: HighlightedStep | null
   onHighlightStep: (s: HighlightedStep | null) => void
@@ -257,7 +221,7 @@ function LegSteps({
 function OptionPicker({
   leg, selectedIndex, color, onSelect,
 }: {
-  leg: LegData
+  leg: RouteLeg
   selectedIndex: number
   color: string
   onSelect: (i: number) => void
@@ -266,7 +230,7 @@ function OptionPicker({
   if (!alts || alts.length <= 1) return null
 
   const seen = new Set<string>()
-  const unique = alts.reduce<{ alt: LegData; originalIndex: number }[]>((acc, alt, i) => {
+  const unique = alts.reduce<{ alt: RouteLeg; originalIndex: number }[]>((acc, alt, i) => {
     const transitSteps = alt.steps?.filter(s => s.mode !== 'WALK' && s.line) ?? []
     const key = transitSteps.map(s => s.line).join('+') + alt.departureTime
     if (!seen.has(key)) { seen.add(key); acc.push({ alt, originalIndex: i }) }
@@ -345,7 +309,7 @@ function ViewSegmentButton({ color, highlighted, onEnter, onLeave }: {
 export function Timeline({ result, selectedOptions, onSelectOption, highlightedLeg, onHighlightLeg, highlightedStep, onHighlightStep, onSave }: Props) {
   const { legs, stops, totalDurationMinutes, arrivalTime } = result
 
-  const activeLeg = (leg: LegData, i: number): LegData => {
+  const activeLeg = (leg: RouteLeg, i: number): RouteLeg => {
     const sel = selectedOptions[i] ?? 0
     return sel === 0 ? leg : (leg.alternatives?.[sel] ?? leg)
   }
