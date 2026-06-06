@@ -6,7 +6,7 @@ import { Favourites, Favourite, saveFavourite } from './components/Favourites'
 import { useGoogleMaps } from './hooks/useGoogleMaps'
 import PlanForm from './components/PlanForm'
 import { generateUUID, getStorageItem, setStorageItem } from './utils'
-import type { RouteLeg } from './types'
+import type { RouteResult, RouteLeg } from './types'
 import TabBar from './components/TabBar'
 import ThemeToggle from './components/ThemeToggle'
 import SaveModal from './components/SaveModal'
@@ -152,7 +152,7 @@ export default function App() {
 
   // selection handled by route planning hook (`hookSelectOption`)
 
-  const activeResult = useMemo(() => {
+  const activeResult = useMemo<RouteResult | null>(() => {
     if (!hookResult) return null
     return { ...hookResult, legs: hookResult.legs.map((leg: RouteLeg, i: number) => { const sel = hookSelectedOptions[i] ?? 0; return sel === 0 ? leg : (leg.alternatives?.[sel] ?? leg) }) }
   }, [hookResult, hookSelectedOptions])
@@ -218,7 +218,7 @@ export default function App() {
           /> : tab === 'timeline' ? <div className="flex flex-col flex-1 overflow-hidden">{timelineContent}</div> : <div className="flex flex-col flex-1 overflow-hidden"><Favourites onRun={runFavourite} /></div>}
         </div>
         <div className="flex-1 relative">
-          <TransitMap result={activeResult as any} highlightedLeg={highlightedLeg} highlightedStep={highlightedStep} theme={theme} />
+          <TransitMap result={activeResult} highlightedLeg={highlightedLeg} highlightedStep={highlightedStep} theme={theme} />
           {mapEmptyState}
         </div>
       </div>
@@ -228,7 +228,7 @@ export default function App() {
 
         {/* Full-screen map */}
           <div className="absolute inset-0">
-          <TransitMap result={activeResult as any} highlightedLeg={highlightedLeg} highlightedStep={highlightedStep} theme={theme} />
+          <TransitMap result={activeResult} highlightedLeg={highlightedLeg} highlightedStep={highlightedStep} theme={theme} />
           {mapEmptyState}
         </div>
 
