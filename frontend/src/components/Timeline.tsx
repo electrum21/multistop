@@ -7,7 +7,7 @@ function normaliseMode(mode: string, line?: string): string {
   return mode
 }
 
-import type { RouteResult, RouteLeg, RouteStep, RouteStop } from '../types'
+import type { RouteResult, RouteLeg, RouteStep } from '../types'
 
 type HighlightedStep = { leg: number; stepIndex: number }
 

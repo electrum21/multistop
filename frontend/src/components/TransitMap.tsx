@@ -10,7 +10,7 @@ const MODE_COLORS: Record<string, string> = {
 }
 
 const DEFAULT_COLOR = '#7C3AED' // purple fallback
-import type { RouteResult, RouteLeg, RouteStep, RouteStop, LatLng } from '../types'
+import type { RouteResult } from '../types'
 
 interface Props { result: RouteResult | null; highlightedLeg?: number | null; highlightedStep?: { leg: number; stepIndex: number } | null; theme?: 'light' | 'dark' }
 
