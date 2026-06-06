@@ -213,7 +213,7 @@ export function TransitMap({ result, highlightedLeg, highlightedStep, theme }: P
 
           const polyline = L.polyline(pts, {
             color,
-            weight: isWalk ? 4 : 5,
+            weight: isWalk ? 2 : 2.5,
             opacity: isWalk ? 0.7 : 0.9,
             dashArray: isWalk ? '0, 10' : undefined,
             lineCap: isWalk ? 'round' : 'round',
@@ -228,7 +228,7 @@ export function TransitMap({ result, highlightedLeg, highlightedStep, theme }: P
             `)
             .addTo(map)
 
-          ;(polyline.options as any)._baseWeight = isWalk ? 4 : 5
+          ;(polyline.options as any)._baseWeight = isWalk ? 2 : 2.5
           ;(polyline.options as any)._baseOpacity = isWalk ? 0.7 : 0.9
           layersRef.current.push(polyline)
           legPolylines.push(polyline)
@@ -245,7 +245,7 @@ export function TransitMap({ result, highlightedLeg, highlightedStep, theme }: P
 
         const polyline = L.polyline(pts, {
           color,
-          weight: isWalk ? 4 : 5,
+          weight: isWalk ? 2 : 2.5,
           opacity: isWalk ? 0.7 : 0.9,
           dashArray: isWalk ? '0, 10' : undefined,
           lineCap: isWalk ? 'round' : 'round',
@@ -260,7 +260,7 @@ export function TransitMap({ result, highlightedLeg, highlightedStep, theme }: P
           `)
           .addTo(map)
 
-        ;(polyline.options as any)._baseWeight = isWalk ? 4 : 5
+        ;(polyline.options as any)._baseWeight = isWalk ? 2 : 2.5
         ;(polyline.options as any)._baseOpacity = isWalk ? 0.7 : 0.9
         layersRef.current.push(polyline)
         legPolylines.push(polyline)
@@ -330,7 +330,7 @@ export function TransitMap({ result, highlightedLeg, highlightedStep, theme }: P
           pl.bringToFront()
           el.style.filter = 'drop-shadow(0 0 4px currentColor)'
           el.style.opacity = '1'
-          pl.setStyle({ weight: 7, opacity: 1 })
+          pl.setStyle({ weight: 3.5, opacity: 1 })
         } else if (highlightedLeg !== null) {
           // Dim other legs
           el.style.filter = ''
@@ -358,7 +358,7 @@ export function TransitMap({ result, highlightedLeg, highlightedStep, theme }: P
       if (isTarget) {
         pl.bringToFront()
         el.style.filter = 'drop-shadow(0 0 6px currentColor)'
-        pl.setStyle({ weight: 9, opacity: 1 })
+        pl.setStyle({ weight: 4.5, opacity: 1 })
       } else if (highlightedStep !== null) {
         // Dim every other step while one is hovered
         el.style.filter = ''

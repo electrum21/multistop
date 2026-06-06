@@ -55,6 +55,7 @@ interface Props {
   onHighlightLeg: (legIndex: number | null) => void
   highlightedStep: HighlightedStep | null
   onHighlightStep: (step: HighlightedStep | null) => void
+  onSave?: () => void
 }
 
 function modeIcon(mode: string, line?: string): React.ReactElement {
@@ -352,7 +353,7 @@ function ViewSegmentButton({ color, highlighted, onEnter, onLeave }: {
   )
 }
 
-export function Timeline({ result, selectedOptions, onSelectOption, highlightedLeg, onHighlightLeg, highlightedStep, onHighlightStep }: Props) {
+export function Timeline({ result, selectedOptions, onSelectOption, highlightedLeg, onHighlightLeg, highlightedStep, onHighlightStep, onSave }: Props) {
   const { legs, stops, totalDurationMinutes, arrivalTime } = result
 
   const activeLeg = (leg: LegData, i: number): LegData => {
@@ -374,22 +375,33 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
   return (
     <div className="flex flex-col h-full">
       {/* Summary strip */}
-      <div className="flex gap-2 px-5 py-3 border-b border-gray-100 dark:border-gray-800 text-center flex-shrink-0">
-        {[
-          { val: formatMinutes(totalDurationMinutes), label: 'Total' },
-          { val: formatMinutes(transitMin), label: 'Transit' },
-          { val: formatMinutes(walkMin), label: 'Walking' },
-          { val: formatMinutes(stayMin), label: 'Layovers' },
-        ].map(({ val, label }) => (
-          <div key={label} className="flex-1">
-            <div className="text-base font-medium leading-tight dark:text-gray-100">{val}</div>
-            <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{label}</div>
-          </div>
-        ))}
+      <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
+        <div className="flex flex-1 gap-2 text-center">
+          {[
+            { val: formatMinutes(totalDurationMinutes), label: 'Total' },
+            { val: formatMinutes(transitMin), label: 'Transit' },
+            { val: formatMinutes(walkMin), label: 'Walking' },
+            { val: formatMinutes(stayMin), label: 'Layovers' },
+          ].map(({ val, label }) => (
+            <div key={label} className="flex-1">
+              <div className="text-base font-medium leading-tight dark:text-gray-100">{val}</div>
+              <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{label}</div>
+            </div>
+          ))}
+        </div>
+        {onSave && (
+          <button
+            onClick={onSave}
+            className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-gray-400 dark:text-gray-500 hover:border-blue-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+          >
+            <i className="fa-regular fa-bookmark" />
+            Save
+          </button>
+        )}
       </div>
 
       {/* Timeline scroll area */}
-      <div className="flex-1 overflow-y-auto px-5 pt-4 pb-32">
+      <div className="flex-1 overflow-y-auto px-5 pt-4">
         <div className="relative">
           {legs.map((leg, i) => {
             const color = '#2563EB'
@@ -410,7 +422,7 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
                 <div className="flex gap-3">
                   <div className="flex flex-col items-center flex-shrink-0">
                     <StopCircle number={stopNum} color={color} />
-                    <div className="w-px flex-1 min-h-[8px]" style={{ background: `${color}30` }} />
+                    <div className="w-px flex-1 min-h-[8px]" style={{ width: '0.5px', background: `${color}30` }} />
                   </div>
                   <div className="pb-1 flex-1 min-w-0 flex items-start justify-between gap-2">
                     <div className="min-w-0">
@@ -431,7 +443,7 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
                 <div className="flex gap-3">
                   <div className="flex flex-col items-center flex-shrink-0">
                     <div className="w-7 flex-shrink-0" />
-                    <div className="w-px flex-1 min-h-[24px]" style={{ background: `${color}30` }} />
+                    <div className="w-px flex-1 min-h-[24px]" style={{ width: '0.5px', background: `${color}30` }} />
                   </div>
                   <div className="pb-1 flex-1 min-w-0">
                     <div className="flex items-start gap-2">
@@ -484,7 +496,7 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
                     <div className="flex gap-3">
                       <div className="flex flex-col items-center flex-shrink-0">
                         <StopCircle number={stopNum + 1} color={nextColor} />
-                        <div className="w-px flex-1 min-h-[8px] bg-gray-200 dark:bg-gray-700" />
+                        <div className="w-px flex-1 min-h-[8px] bg-gray-200 dark:bg-gray-700" style={{ width: '0.5px' }} />
                       </div>
                       <div className="pb-1 flex-1 min-w-0">
                         <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">{active.arrivalTime}</div>
@@ -496,7 +508,7 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
                     <div className="flex gap-3">
                       <div className="flex flex-col items-center flex-shrink-0">
                         <div className="w-7 flex-shrink-0" />
-                        <div className="w-px flex-1 min-h-[24px] bg-gray-200 dark:bg-gray-700" />
+                        <div className="w-px flex-1 min-h-[24px] bg-gray-200 dark:bg-gray-700" style={{ width: '0.5px' }} />
                       </div>
                       <div className="flex-1 min-w-0 mb-2">
                         <div className="bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg px-3 py-2">
@@ -512,7 +524,7 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
                     <div className="flex gap-3">
                       <div className="flex flex-col items-center flex-shrink-0">
                         <StopCircle number={stopNum + 1} color={nextColor} />
-                        <div className="w-px flex-1 min-h-[8px]" style={{ background: `${nextColor}30` }} />
+                        <div className="w-px flex-1 min-h-[8px]" style={{ width: '0.5px', background: `${nextColor}30` }} />
                       </div>
                       <div className="pb-1 flex-1 min-w-0 flex items-start justify-between gap-2">
                         <div className="min-w-0">
