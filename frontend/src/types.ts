@@ -2,7 +2,7 @@ export interface LatLng { lat: number; lng: number }
 
 export interface RouteStep {
   instruction: string
-  mode?: string
+  mode: string
   line?: string
   durationSeconds: number
   polyline?: LatLng[]
@@ -11,26 +11,26 @@ export interface RouteStep {
 }
 
 export interface RouteLeg {
-  legIndex?: number
-  from?: string
-  to?: string
-  departureTime?: string
-  arrivalTime?: string
-  durationMinutes?: number
-  mode?: string
-  line?: string
-  polyline?: LatLng[]
-  steps?: RouteStep[]
+  legIndex: number
+  from: string
+  to: string
+  departureTime: string
+  arrivalTime: string
+  durationMinutes: number
+  mode: string
+  line: string
+  polyline: LatLng[]
+  steps: RouteStep[]
   alternatives?: RouteLeg[]
 }
 
 export interface RouteStop {
   name: string
-  lat?: number
-  lng?: number
-  arrivalTime?: string | null
-  departureTime?: string | null
-  stay?: number
+  lat: number
+  lng: number
+  arrivalTime: string | null
+  departureTime: string | null
+  stay: number
 }
 
 export interface RouteResult {
