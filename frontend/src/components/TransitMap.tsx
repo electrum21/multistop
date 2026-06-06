@@ -8,7 +8,7 @@ const MODE_COLORS: Record<string, string> = {
   TRAM:   '#EA580C',  // orange
   FERRY:  '#0284C7',  // sky
 }
-const WALK_COLOR   = '#1F2937'  // near-black
+const _WALK_COLOR  = '#1F2937'  // near-black
 const DEFAULT_COLOR = '#7C3AED' // purple fallback
 
 interface LatLng { lat: number; lng: number }
@@ -350,9 +350,9 @@ export function TransitMap({ result, highlightedLeg, highlightedStep, theme }: P
     if (!result) return
     stepPolylinesRef.current.forEach((pl, key) => {
       const [legStr, stepStr] = key.split(':')
-      const isTarget = highlightedStep !== null
-        && parseInt(legStr) === highlightedStep.leg
-        && parseInt(stepStr) === highlightedStep.stepIndex
+      const isTarget = highlightedStep != null
+        && parseInt(legStr) === highlightedStep!.leg
+        && parseInt(stepStr) === highlightedStep!.stepIndex
       const el = (pl as any)._path as SVGPathElement | undefined
       if (!el) return
       if (isTarget) {
@@ -401,7 +401,7 @@ export function TransitMap({ result, highlightedLeg, highlightedStep, theme }: P
       {/* Legend */}
       {result && legendEntries.length > 0 && (
         <div className="absolute bottom-3 left-3 md:bottom-auto md:top-3 md:left-auto md:right-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-xl p-2.5 z-10 shadow-sm flex md:flex-col flex-row gap-x-3 flex-wrap">
-          {legendEntries.map(({ mode, color, isWalk, label, icon }) => (
+          {legendEntries.map(({ mode, color, isWalk, label, icon: _icon }) => (
             <div key={mode} className="flex items-center gap-2 text-xs">
               <svg width="20" height="8" viewBox="0 0 20 8" className="flex-shrink-0">
                 {isWalk ? (

@@ -83,7 +83,7 @@ function modeLabel(mode: string, line?: string) {
   }
 }
 
-function stepModeColor(mode: string) {
+function _stepModeColor(mode: string) {
   switch (mode?.toUpperCase()) {
     case 'SUBWAY': return { bg: '#EFF6FF', text: '#2563EB', border: '#BFDBFE' }
     case 'BUS': return { bg: '#F0FDF4', text: '#16A34A', border: '#BBF7D0' }
@@ -318,7 +318,7 @@ function OptionPicker({
   )
 }
 
-function StopCircle({ number, color }: { number: number; color: string; isLast?: boolean }) {
+function StopCircle({ number, color, isLast }: { number: number; color: string; isLast?: boolean }) {
   return (
     <div
       className="w-7 h-7 rounded-full flex items-center justify-center font-bold flex-shrink-0 z-10 text-white"
