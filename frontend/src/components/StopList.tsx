@@ -11,9 +11,10 @@ export interface Stop {
 interface Props {
   stops: Stop[]
   onChange: (stops: Stop[]) => void
+  onError?: (msg: string | null) => void
 }
 
-export function StopList({ stops, onChange }: Props) {
+export function StopList({ stops, onChange, onError }: Props) {
   const inputRefs = useRef<Record<number, HTMLDivElement | null>>({})
   const dragIdx = useRef<number | null>(null)
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
@@ -101,6 +102,7 @@ export function StopList({ stops, onChange }: Props) {
                   resolvedPlace={stop.place}
                   placeholder={isFirst ? 'Origin' : isLast ? 'Destination' : 'Waypoint'}
                   onChange={(name, place) => update(stop.id, { name, place })}
+                  onError={msg => onError?.(msg)}
                   onCommit={() => focusNext(idx)}
                 />
               </div>

@@ -1,0 +1,16 @@
+{
+  "type": "Feature",
+  "properties": { "name": "Singapore (approx bbox)" },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [103.600, 1.130],
+        [104.040, 1.130],
+        [104.040, 1.470],
+        [103.600, 1.470],
+        [103.600, 1.130]
+      ]
+    ]
+  }
+}

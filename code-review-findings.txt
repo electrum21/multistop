@@ -1,0 +1,150 @@
+CODE REVIEW: App.tsx
+=====================
+
+🔴 CRITICAL
+-----------
+
+1. UNTYPED RESULT VARIABLE (Line 53)
+   Issue: The `result` state uses `any` type, which defeats TypeScript's type safety.
+   Impact: Type errors won't be caught at compile time; you may encounter runtime errors.
+   Recommendation: Define a proper interface for the result object with `legs`, `alternatives`, and other nested structures.
+
+2. MISSING ERROR HANDLING IN STORAGE OPERATIONS (Lines 24-26, 83, 84)
+   Issue: localStorage calls don't have try-catch blocks.
+   Impact: If storage is full or disabled (e.g., private browsing mode), the app will crash silently or throw unhandled errors.
+   Recommendation: Wrap all localStorage operations in try-catch blocks with user-friendly fallbacks.
+
+   Example:
+   try {
+     localStorage.setItem('theme', theme)
+   } catch (e) {
+     console.warn('Failed to save theme to localStorage')
+   }
+
+---
+
+🟡 WARNING
+----------
+
+3. ACCESSIBILITY ISSUES (Multiple locations)
+   Issues:
+   - Drag handle div (lines 222-249): No ARIA labels for the drag interaction
+   - Mode toggle buttons (lines 265-269): Only icons, missing descriptive aria-label attributes
+   - Save/cancel buttons (lines 380-390): Could benefit from more descriptive labels
+   - Color-only state indicators: Blue highlight alone isn't accessible to colorblind users
+   
+   Recommendation: Add ARIA attributes and redundant visual indicators (e.g., check mark + color).
+
+4. BROWSER COMPATIBILITY: crypto.randomUUID() (Line 144)
+   Issue: Limited browser support (not available in older browsers or some mobile browsers).
+   Recommendation: Use a UUID library (e.g., `uuid` npm package) or provide a polyfill.
+
+5. INSUFFICIENT INPUT VALIDATION
+   Issues:
+   - Stop coordinates checked only for `.name.trim()`, but lat/lng not validated
+   - `departureTime` not validated as proper datetime
+   - No checks for reasonable lat/lng ranges (e.g., -90 to 90 for lat)
+   - Duplicate stops aren't prevented
+   
+   Recommendation: Add validation functions before sending to the API.
+
+6. ERROR HANDLING IN CATCH BLOCK (Line 80)
+   Issue: Only extracts `err.error` from response, but doesn't handle non-JSON responses.
+   Impact: Could display `undefined` or `[object Object]` to the user.
+   Recommendation: Add fallback for parsing errors and provide a default error message.
+
+   Current code:
+   const err = await resp.json().catch(() => ({}))
+   
+   Better approach:
+   let err: any = {}
+   try {
+     err = await resp.json()
+   } catch {
+     err = { error: 'Server error. Please try again.' }
+   }
+
+---
+
+🔵 INFO
+-------
+
+7. COMPONENT COMPLEXITY
+   Issue: App.tsx handles: state management, form rendering, map integration, favorites, timeline, and responsive layout.
+   Recommendation: Extract into smaller components:
+   - <PlanForm /> - form logic and rendering
+   - <MobileSheet /> - bottom sheet drag/collapse logic
+   - Custom hooks: useRoutePlanning(), useFavoritesManagement(), useDragSheet()
+
+8. MAGIC NUMBERS AND VALUES (Throughout)
+   Examples: 88vh, 42vh, 0.93, 0.2, 40px drag threshold, 0.35s transitions
+   Recommendation: Extract to constants at the top:
+   
+   const SHEET_FULL_HEIGHT_VH = 88
+   const SHEET_PEEK_HEIGHT_VH = 42
+   const SHEET_MAX_CLAMP = 0.93
+   const SHEET_MIN_CLAMP = 0.2
+   const DRAG_THRESHOLD_PX = 40
+   const SHEET_TRANSITION_MS = 350
+
+9. INLINE STYLE OBJECTS (Lines 230-234)
+   Issue: Sheet style object recreated on every render.
+   Recommendation: Use useMemo or move to a constant:
+   
+   const sheetStyle = useMemo(() => ({
+     height: sheetFull ? '88vh' : '42vh',
+     transition: 'height 0.35s cubic-bezier(0.32, 0.72, 0, 1)',
+     boxShadow: '0 -4px 32px rgba(0,0,0,0.15)',
+   }), [sheetFull])
+
+10. ERROR DISPLAY WITHOUT TIMEOUT (Line 109)
+    Issue: Errors display indefinitely without a close button or timeout.
+    Impact: User might miss an error or be confused by an old error message.
+    Recommendation: Add auto-dismiss after 5-8 seconds or include a close button.
+
+11. PLANFORM RECREATION ON EVERY RENDER (Lines 97-124)
+    Issue: JSX object reconstructed every render despite stable dependencies.
+    Recommendation: Extract to a separate component or wrap in useMemo.
+
+12. MISSING LOADING STATE UX
+    Issue: When loading is true, button is disabled but form fields remain interactive.
+    Impact: User confusion - they might think they can still edit while waiting.
+    Recommendation: Disable form fields while loading, or show a semi-transparent overlay.
+
+13. RESPONSIVE DESIGN EDGE CASES
+    Issue: Mobile sheet peek height (42vh) combined with long content could overflow.
+    Recommendation: Test with very long stop names, error messages, and ensure scrolling works smoothly.
+
+---
+
+✅ GOOD
+-------
+
+Strengths of the codebase:
+
+- Excellent responsive design pattern with clear mobile/desktop separation (hidden md:flex pattern)
+- Thoughtful dark mode implementation with localStorage persistence
+- Good use of useMemo for derived state (activeResult)
+- Clean Tailwind styling with consistent design tokens
+- Proper drag gesture handling with snap-back logic and pointer event capture
+- Well-structured tab-based navigation
+- Smart UX: collapsing sheet to show map after planning a route
+- Good error handling patterns with user-friendly messages
+- Theme toggle with visual feedback is well-implemented
+
+---
+
+SUMMARY
+-------
+
+Priority fixes:
+1. Add proper TypeScript types for result object
+2. Wrap localStorage in try-catch blocks
+3. Add ARIA labels for accessibility
+4. Improve error message handling in API catch block
+
+Nice-to-haves:
+1. Extract magic numbers to constants
+2. Break component into smaller pieces
+3. Add error auto-dismiss timeout
+4. Replace crypto.randomUUID() with a polyfilled alternative

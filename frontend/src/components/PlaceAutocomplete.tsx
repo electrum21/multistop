@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback, KeyboardEvent } from 'react'
+import { inSingaporeStrict } from '../utils'
 
 export interface ResolvedPlace {
   placeId: string
@@ -21,6 +22,7 @@ interface Props {
   placeholder?: string
   countryCode?: string
   onChange: (name: string, place: ResolvedPlace | null) => void
+  onError?: (msg: string | null) => void
   disabled?: boolean
   className?: string
   onCommit?: () => void
@@ -69,6 +71,14 @@ export function PlaceAutocomplete({
           setGeoLoading(false)
           if (status !== 'OK' || !results?.[0]) return
           const r = results[0]
+          const countryComp = r.address_components?.find(c => c.types?.includes('country'))
+          const isSG = (countryComp?.short_name === 'SG') || inSingaporeStrict(lat, lng)
+          if (!isSG) {
+            const msg = 'Current location appears to be outside Singapore. This app only supports locations within Singapore.'
+            if (typeof onError === 'function') onError(msg)
+            else window.alert(msg)
+            return
+          }
           setGeoOption({
             label: r.formatted_address,
             place: {
@@ -123,11 +133,23 @@ export function PlaceAutocomplete({
     services.gc.geocode({ placeId: prediction.placeId }, (results, status) => {
       if (status !== 'OK' || !results?.[0]) return
       const loc = results[0].geometry.location
+      const lat = loc.lat()
+      const lng = loc.lng()
+      const countryComp = results[0].address_components?.find(c => c.types?.includes('country'))
+      const isSG = (countryComp?.short_name === 'SG') || inSingaporeStrict(lat, lng)
+      if (!isSG) {
+        const msg = 'Selected location is outside Singapore. Please choose a place within Singapore.'
+        if (typeof onError === 'function') onError(msg)
+        else window.alert(msg)
+        setOpen(false)
+        setPredictions([])
+        return
+      }
       const resolved: ResolvedPlace = {
         placeId: prediction.placeId,
         name: prediction.mainText,
-        lat: loc.lat(),
-        lng: loc.lng(),
+        lat,
+        lng,
         formattedAddress: results[0].formatted_address,
       }
       onChange(prediction.mainText, resolved)
