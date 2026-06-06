@@ -150,9 +150,7 @@ export default function App() {
     setSaveModalOpen(false)
   }
 
-  function selectOption(legIndex: number, optionIndex: number) {
-    setSelectedOptions(prev => { const next = [...prev]; next[legIndex] = optionIndex; return next })
-  }
+  // selection handled by route planning hook (`hookSelectOption`)
 
   const activeResult = useMemo(() => {
     if (!hookResult) return null
@@ -220,7 +218,7 @@ export default function App() {
           /> : tab === 'timeline' ? <div className="flex flex-col flex-1 overflow-hidden">{timelineContent}</div> : <div className="flex flex-col flex-1 overflow-hidden"><Favourites onRun={runFavourite} /></div>}
         </div>
         <div className="flex-1 relative">
-          <TransitMap result={activeResult} highlightedLeg={highlightedLeg} highlightedStep={highlightedStep} theme={theme} />
+          <TransitMap result={activeResult as any} highlightedLeg={highlightedLeg} highlightedStep={highlightedStep} theme={theme} />
           {mapEmptyState}
         </div>
       </div>
@@ -229,8 +227,8 @@ export default function App() {
       <div className="flex md:hidden h-full overflow-hidden relative">
 
         {/* Full-screen map */}
-        <div className="absolute inset-0">
-          <TransitMap result={activeResult} highlightedLeg={highlightedLeg} highlightedStep={highlightedStep} theme={theme} />
+          <div className="absolute inset-0">
+          <TransitMap result={activeResult as any} highlightedLeg={highlightedLeg} highlightedStep={highlightedStep} theme={theme} />
           {mapEmptyState}
         </div>
 

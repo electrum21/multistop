@@ -1,5 +1,3 @@
-import React from 'react'
-
 type Tab = 'plan' | 'timeline' | 'favourites'
 
 type Props = {

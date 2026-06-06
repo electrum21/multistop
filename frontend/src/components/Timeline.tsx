@@ -1,4 +1,4 @@
-import React from 'react'
+// Timeline component — no default React import required with new JSX transform
 
 // Singapore LRT lines reported as TRAM by Google — treat them as SUBWAY
 const LRT_LINES = new Set(['PG', 'SK', 'BP', 'STC', 'CGL'])
@@ -58,7 +58,7 @@ interface Props {
   onSave?: () => void
 }
 
-function modeIcon(mode: string, line?: string): React.ReactElement {
+function modeIcon(mode: string, line?: string): JSX.Element {
   const effective = (line && line !== 'Sentosa Express') ? normaliseMode(mode, line) : mode
   switch (effective?.toUpperCase()) {
     case 'SUBWAY': return <i className="fa-solid fa-train-subway dark:text-white" />

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, useCallback, KeyboardEvent, ChangeEvent } from 'react'
 import { inSingaporeStrict } from '../utils'
 
 export interface ResolvedPlace {
@@ -38,7 +38,7 @@ function useDebounce<T extends (...args: any[]) => void>(fn: T, delay: number): 
 
 export function PlaceAutocomplete({
   value, resolvedPlace, placeholder, countryCode = 'sg',
-  onChange, disabled, className, onCommit,
+  onChange, onError, disabled, className, onCommit,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
@@ -168,7 +168,7 @@ export function PlaceAutocomplete({
     onCommit?.()
   }
 
-  function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleInput(e: ChangeEvent<HTMLInputElement>) {
     const val = e.target.value
     onChange(val, null)
     setGeoOption(null)

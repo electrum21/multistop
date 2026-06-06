@@ -1,6 +1,5 @@
-import React, { Dispatch, SetStateAction } from 'react'
+import { Dispatch, SetStateAction, useState } from 'react'
 import { StopList, Stop } from './StopList'
-import { useState } from 'react'
 
 type Props = {
   departureTime: string

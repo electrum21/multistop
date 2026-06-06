@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, DragEvent } from 'react'
 import { PlaceAutocomplete, ResolvedPlace } from './PlaceAutocomplete'
 
 export interface Stop {
@@ -47,7 +47,7 @@ export function StopList({ stops, onChange, onError }: Props) {
     dragIdx.current = idx
   }
 
-  function onDragOver(e: React.DragEvent, idx: number) {
+  function onDragOver(e: DragEvent<HTMLDivElement>, idx: number) {
     e.preventDefault()
     setDragOverIdx(idx)
   }
