@@ -83,17 +83,6 @@ function modeLabel(mode: string, line?: string) {
   }
 }
 
-function _stepModeColor(mode: string) {
-  switch (mode?.toUpperCase()) {
-    case 'SUBWAY': return { bg: '#EFF6FF', text: '#2563EB', border: '#BFDBFE' }
-    case 'BUS': return { bg: '#F0FDF4', text: '#16A34A', border: '#BBF7D0' }
-    case 'WALK': return { bg: '#F9FAFB', text: '#6B7280', border: '#E5E7EB' }
-    case 'TRAM': return { bg: '#FFF7ED', text: '#EA580C', border: '#FED7AA' }
-    case 'FERRY': return { bg: '#F0F9FF', text: '#0284C7', border: '#BAE6FD' }
-    default: return { bg: '#F5F3FF', text: '#7C3AED', border: '#DDD6FE' }
-  }
-}
-
 function formatMinutes(minutes: number) {
   if (minutes < 60) return `${minutes}m`
   const h = Math.floor(minutes / 60)
@@ -318,7 +307,7 @@ function OptionPicker({
   )
 }
 
-function StopCircle({ number, color, isLast }: { number: number; color: string; isLast?: boolean }) {
+function StopCircle({ number, color}: { number: number; color: string; isLast?: boolean }) {
   return (
     <div
       className="w-7 h-7 rounded-full flex items-center justify-center font-bold flex-shrink-0 z-10 text-white"
