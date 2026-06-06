@@ -318,7 +318,7 @@ function OptionPicker({
   )
 }
 
-function StopCircle({ number, color, isLast }: { number: number; color: string; isLast?: boolean }) {
+function StopCircle({ number, color }: { number: number; color: string; isLast?: boolean }) {
   return (
     <div
       className="w-7 h-7 rounded-full flex items-center justify-center font-bold flex-shrink-0 z-10 text-white"
