@@ -376,13 +376,6 @@ export function FoodieStopPicker({ origin, destination, departureTime, onSelect 
 
       {!loading && candidates.length > 0 && (
         <>
-          <button
-            onClick={() => onSelect(candidates[0])}
-            className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-1.5"
-          >
-            <i className="fa-solid fa-wand-magic-sparkles" /> Surprise me — add top pick
-          </button>
-
           <div className="overflow-y-auto space-y-2 pr-0.5" style={{ maxHeight: '220px' }}>
             {candidates.map(c => (
               <button
