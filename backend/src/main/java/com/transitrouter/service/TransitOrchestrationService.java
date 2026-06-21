@@ -71,8 +71,9 @@ public class TransitOrchestrationService {
             // or before the previous leg even starts) is not a real choice and confuses
             // the timeline. Keep at least one (the soonest) even if all options are early,
             // so selectBestLeg/the defensive clamp below still has something to work with.
+            final long cursorEpoch = cursor.getEpochSecond();
             List<LegResult> alternatives = rawAlternatives.stream()
-                    .filter(a -> a.getDepartureTimeEpoch() >= cursor.getEpochSecond())
+                    .filter(a -> a.getDepartureTimeEpoch() >= cursorEpoch)
                     .sorted(Comparator.comparingLong(LegResult::getDepartureTimeEpoch))
                     .collect(java.util.stream.Collectors.toList());
             if (alternatives.isEmpty()) {
