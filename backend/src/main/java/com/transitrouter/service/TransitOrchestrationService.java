@@ -67,11 +67,25 @@ public class TransitOrchestrationService {
             );
             legAlternatives.add(alternatives);
 
-            LegResult best = alternatives.get(0);
+            LegResult best = selectBestLeg(alternatives, cursor);
             legResults.add(best);
 
             Instant arrival = Instant.ofEpochSecond(best.getArrivalTimeEpoch());
             Instant actualDeparture = Instant.ofEpochSecond(best.getDepartureTimeEpoch());
+
+            // Defensive clamp: a leg can never depart before the cursor (the earliest
+            // moment the traveller is actually free to leave). If Google's transit data
+            // returns an earlier departure than requested, treat it as departing now and
+            // shift the arrival by the same offset so duration stays consistent.
+            if (actualDeparture.isBefore(cursor)) {
+                long shiftSeconds = cursor.getEpochSecond() - actualDeparture.getEpochSecond();
+                log.warn("Leg {} returned departure {} before cursor {} — clamping by {}s",
+                        i + 1, TIME_FMT.format(actualDeparture), TIME_FMT.format(cursor), shiftSeconds);
+                actualDeparture = cursor;
+                arrival = arrival.plusSeconds(shiftSeconds);
+                best.setDepartureTimeEpoch(actualDeparture.getEpochSecond());
+                best.setArrivalTimeEpoch(arrival.getEpochSecond());
+            }
 
             if (i > 0) {
                 stopMeta.get(i).put("departureTime", TIME_FMT.format(actualDeparture));
@@ -92,6 +106,35 @@ public class TransitOrchestrationService {
         return buildResponse(legResults, legAlternatives, stopMeta, stops.get(0),
                 Instant.ofEpochSecond(legResults.get(0).getDepartureTimeEpoch()),
                 cursor);
+    }
+
+    /**
+     * Picks the best alternative for a leg: prefer the one departing soonest at-or-after
+     * the cursor (the earliest the traveller can actually leave). Google's "alternatives"
+     * aren't guaranteed to be sorted by departure time, and transit data can occasionally
+     * return a route departing earlier than requested — so we don't just trust index 0.
+     */
+    private LegResult selectBestLeg(List<LegResult> alternatives, Instant cursor) {
+        LegResult best = null;
+        for (LegResult candidate : alternatives) {
+            if (candidate.getDepartureTimeEpoch() >= cursor.getEpochSecond()) {
+                if (best == null || candidate.getDepartureTimeEpoch() < best.getDepartureTimeEpoch()) {
+                    best = candidate;
+                }
+            }
+        }
+        // No alternative respects the cursor (e.g. all data is stale/odd) — fall back to
+        // the one closest to the cursor; the defensive clamp in orchestrate() will fix it up.
+        if (best == null) {
+            best = alternatives.get(0);
+            for (LegResult candidate : alternatives) {
+                if (Math.abs(candidate.getDepartureTimeEpoch() - cursor.getEpochSecond())
+                        < Math.abs(best.getDepartureTimeEpoch() - cursor.getEpochSecond())) {
+                    best = candidate;
+                }
+            }
+        }
+        return best;
     }
 
     private Map<String, Object> buildResponse(
