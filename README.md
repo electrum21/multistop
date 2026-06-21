@@ -150,44 +150,6 @@ Or with coordinates (avoids geocoding round-trip):
   ]
 }
 ```
-
----
-
-## Phase 2: TSP Optimisation
-
-Set `"optimiseOrder": true` in the request body. The backend will:
-
-1. Pin origin and destination
-2. Run a **nearest-neighbour heuristic** on intermediate waypoints
-3. At each step, probe the Directions API from the current position to each remaining candidate
-4. Greedily select the fastest next stop
-
-**Complexity:** O(n²) API calls where n = number of intermediate stops. Works well for ≤ 8 waypoints. For more, consider [LKH-3](http://webhotel4.ruc.dk/~keld/research/LKH-3/) or a proper DP Held-Karp implementation.
-
----
-
-## Extending to OpenTripPlanner
-
-OTP is free and uses GTFS feeds (perfect for Singapore's LTA data). To switch:
-
-1. Set `transit.provider=otp` in `application.properties`
-2. Set `transit.otp.base-url=http://localhost:8080/otp/routers/default/plan`
-3. Implement `OtpDirectionsClient` using OTP's REST API (identical interface to `GoogleDirectionsClient`)
-
----
-
-## Running Tests
-
-```bash
-./mvnw test
-```
-
-The `TransitOrchestrationServiceTest` mocks the API client and verifies:
-- Time cursor advances correctly after each layover
-- Leg 2's departure epoch = leg 1 arrival + stay duration
-- Cumulative time shifts with multiple layovers
-- Response shape validation
-
 ---
 
 ## Credits
