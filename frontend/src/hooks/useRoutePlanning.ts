@@ -28,12 +28,14 @@ export function useRoutePlanning() {
         if (!inSingaporeStrict(lat, lng)) return 'All stops must be within Singapore.'
       }
     }
-    // simple duplicate check by name+coords
-    const seen = new Set<string>()
-    for (const s of stops) {
-      const key = `${s.name.trim().toLowerCase()}|${s.place?.lat ?? ''}|${s.place?.lng ?? ''}`
-      if (seen.has(key)) return 'Duplicate stops detected.'
-      seen.add(key)
+    // duplicate check: only flag stops that are adjacent to each other
+    // (e.g. A → A is invalid, but A → B → A round trips are fine)
+    for (let i = 0; i < stops.length - 1; i++) {
+      const a = stops[i]
+      const b = stops[i + 1]
+      const keyA = `${a.name.trim().toLowerCase()}|${a.place?.lat ?? ''}|${a.place?.lng ?? ''}`
+      const keyB = `${b.name.trim().toLowerCase()}|${b.place?.lat ?? ''}|${b.place?.lng ?? ''}`
+      if (keyA === keyB) return 'Two consecutive stops are the same — please vary adjacent stops.'
     }
     if (!departureTime) return 'Please select a departure time.'
     return null
