@@ -467,7 +467,7 @@ export function Timeline({ result, selectedOptions, onSelectOption, highlightedL
                         <div className="bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg px-3 py-2">
                           <div className="text-xs text-gray-400 dark:text-gray-500 font-medium"><i className="fa-regular fa-clock mr-1 dark:text-white" />Staying {midStop.stay} min</div>
                           <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                            {active.arrivalTime} → {legs[i + 1] ? activeLeg(legs[i + 1], i + 1).departureTime : ''}
+                            {active.arrivalTime} → {midStop.departureTime}
                           </div>
                         </div>
                       </div>

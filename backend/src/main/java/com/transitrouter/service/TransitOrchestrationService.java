@@ -58,13 +58,26 @@ public class TransitOrchestrationService {
             log.info("Leg {}: {} -> {} departing at {}", i + 1,
                     from.getName(), to.getName(), TIME_FMT.format(cursor));
 
-            List<LegResult> alternatives = directionsClient.fetchTransitLegs(
+            List<LegResult> rawAlternatives = directionsClient.fetchTransitLegs(
                     resolveLocation(from),
                     resolveLocation(to),
                     cursor.getEpochSecond(),
                     routingPreference,
                     filteredModes
             );
+
+            // Only offer alternatives that actually depart at-or-after the cursor — an
+            // option departing before the traveller is free to leave (e.g. still mid-stay,
+            // or before the previous leg even starts) is not a real choice and confuses
+            // the timeline. Keep at least one (the soonest) even if all options are early,
+            // so selectBestLeg/the defensive clamp below still has something to work with.
+            List<LegResult> alternatives = rawAlternatives.stream()
+                    .filter(a -> a.getDepartureTimeEpoch() >= cursor.getEpochSecond())
+                    .sorted(Comparator.comparingLong(LegResult::getDepartureTimeEpoch))
+                    .collect(java.util.stream.Collectors.toList());
+            if (alternatives.isEmpty()) {
+                alternatives = rawAlternatives;
+            }
             legAlternatives.add(alternatives);
 
             LegResult best = selectBestLeg(alternatives, cursor);
